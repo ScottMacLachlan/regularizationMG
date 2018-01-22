@@ -1,0 +1,39 @@
+
+We consider the solution of the regularized problem
+\begin{equation}
+\label{eq:regularized}
+\min_{x} \|Kx-b\|^2 + \lambda^2\|WLx\|^2,
+\end{equation}
+where the equation $Kx=b$ represents a ``data'' term, where $b$ is
+(noisy) data coming from some imaging process represented by $K$, and
+the second term is a regularization term.  Here, $L$ is a discrete
+gradient matrix, and $W$ is a diagonal weighting matrix with weights
+in the range of $[0,1]$.  An equivalent formulation comes from first
+writing this as a rectangular block least-squares problem,
+\[
+\min_{x} \left\| \left[\begin{array}{c} K \\ \lambda
+      WL\end{array}\right]x - \left[\begin{array}{c} b \\ 0 \end{array}\right]\right\|^2,
+\]
+and, then, consider the resulting normal equations,
+\begin{equation}
+\label{eq:normal}
+\left(K^TK + \lambda^2 L^TW^2L\right)x = K^Tb.
+\end{equation}
+Since $L$ is a discrete gradient, the second matrix in this expression
+corresponds to a variable-coefficient diffusion operator (with
+diffusion coefficient related to the weights in $W$), while the first
+matrix and right-hand side come from the standard normal equations for
+$Kx=b$.
+
+Overall, this comes from a nonlinear problem, where we wish to choose
+$x$, $W$, and $\lambda$ to minimize this functional while doing
+something (iteration to drive $\ell_2$ regularization towards $\ell_1$
+regularization).  We consider the case of fixed $W$, in the context of
+this outer iteration.  At each step of the outer iteration, we need to
+choose a good regularization parameter, $\lambda$, and find the
+solution, $x$, for that value of $\lambda$.
+
+Describe outer iteration for choosing $W$, so that $\|WLx\|_2 \approx
+\|Lx\|_1$, then middle iteration for choosing $\lambda$ for fixed $W$,
+and L-curve criteria, then need for an inner iteration to solve for
+$x$ given $W$ and $\lambda$.
