@@ -1,0 +1,214 @@
+\documentclass{article}
+\usepackage{amsmath,amsfonts,color, amsthm, ifpdf}
+
+\ifpdf
+ \usepackage[pdftex]{graphicx}
+\else
+  \usepackage[dvips]{graphicx}
+\fi
+
+% Margins for plain pagestyle
+\oddsidemargin=0.0in
+\textwidth=6.5in
+\textheight=9.0in
+\topmargin=-0.5in
+
+
+
+\title{Notes on (A)MG for regularised problem}
+\author{Matthias Bolten, Misha E. Kilmer, and Scott P. MacLachlan}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+blah blah blah
+\end{abstract}
+
+
+\section{Introduction}
+\input{intro}
+
+\section{Problem Description}
+
+We consider the solution of the regularized problem
+\begin{equation}
+\label{eq:regularized}
+\min_{x} \|Kx-b\|^2 + \lambda^2\|WLx\|^2,
+\end{equation}
+where the equation $Kx=b$ represents a ``data'' term, where $b$ is
+(noisy) data coming from some imaging process represented by $K$, and
+the second term is a regularization term.  Here, $L$ is a discrete
+gradient matrix, and $W$ is a diagonal weighting matrix with weights
+in the range of $[0,1]$.  An equivalent formulation comes from first
+writing this as a rectangular block least-squares problem,
+\[
+\min_{x} \left\| \left[\begin{array}{c} K \\ \lambda
+      WL\end{array}\right]x - \left[\begin{array}{c} b \\ 0 \end{array}\right]\right\|^2,
+\]
+and, then, consider the resulting normal equations,
+\begin{equation}
+\label{eq:normal}
+\left(K^TK + \lambda^2 L^TW^2L\right)x = K^Tb.
+\end{equation}
+Since $L$ is a discrete gradient, the second matrix in this expression
+corresponds to a variable-coefficient diffusion operator (with
+diffusion coefficient related to the weights in $W$), while the first
+matrix and right-hand side come from the standard normal equations for
+$Kx=b$.
+
+Overall, this comes from a nonlinear problem, where we wish to choose
+$x$, $W$, and $\lambda$ to minimize this functional while doing
+something (iteration to drive $\ell_2$ regularization towards $\ell_1$
+regularization).  We consider the case of fixed $W$, in the context of
+this outer iteration.  At each step of the outer iteration, we need to
+choose a good regularization parameter, $\lambda$, and find the
+solution, $x$, for that value of $\lambda$.
+
+Describe outer iteration for choosing $W$, so that $\|WLx\|_2 \approx
+\|Lx\|_1$, then middle iteration for choosing $\lambda$ for fixed $W$,
+and L-curve criteria, then need for an inner iteration to solve for
+$x$ given $W$ and $\lambda$.
+
+\section{Algorithm}
+
+For fixed $W$, the problem posed in \eqref{eq:regularized} can be
+considered in 3 regimes.
+\begin{enumerate}
+\item When $\lambda > C \frac{\sigma(K)}{\sigma{WL}}$, where
+  $\sigma(K)$ is the largest singular value of $K$ and $\sigma{WL}$ is
+  the largest singular value of $WL$.  In this regime, the
+  regularization (diffusive) term is dominant.
+\item When $C \frac{\sigma(K)}{\sigma{WL}} > \lambda > c
+  \frac{\sigma(K)}{\sigma{WL}}$, for $\mathcal{O}(1)$ constants $c$
+  and $C$, the two terms in \eqref{eq:regularized} are {\it in
+    balance}.
+\item When $\lambda < c \frac{\sigma(K)}{\sigma{WL}}$, the data term
+  in \eqref{eq:regularized} is dominant.
+\end{enumerate}
+For each of these cases, a different solution strategy is optimal.
+
+In the first two cases, the presence of a significant diffusive term
+in \eqref{eq:regularized} suggests the use of a multigrid approach.
+Here, we make use of the equivalence between the formulations in
+\eqref{eq:regularized} and \eqref{eq:normal}, designing an algorithm
+that applies directly to the sparse matrices in
+\eqref{eq:regularized}, but equivalent to constructing an algebraic
+multigrid hierarchy \cite{} based on \eqref{eq:normal}.
+
+Considering the matrix $A = L^TW^2L$, which corresponds to a
+variable-coefficient diffusion operator on a two-dimensional grid,
+classical algebraic multigrid (AMG) is well-known to be an efficient
+algorithm for the solution of linear systems $Au=f$.  Here, we apply a
+standard AMG setup phase to $A$ to create a hierarchy of interpolation
+operators, $P$, and coarse-grid operators, $A_c = P^TAP$ (using
+Galerkin coarsening).  From these interpolation operators, we also
+create {\it one-sided} coarse-grid operators $K_c = KP$ and $(WL)_c =
+WLP$, at all levels in the multigrid hierarchy.  This allows us to
+write down the coarse-grid correction process for a multigrid
+algorithm, by taking a current approximation, $\hat{x}$, and asking to
+solve for a correction in the range of $P$:
+\[
+\min_{y_c}\left\| \left[\begin{array}{c} K \\ \lambda
+      WL\end{array}\right](\hat{x}+Py_c) - \left[\begin{array}{c} b \\ 0 \end{array}\right]\right\|^2.
+\]
+Computing the minimum, we characterize the coarse-grid solution $y_c$
+as the solution to
+\[
+\left(P^TK^TKP + \lambda^2P^TL^TW^2LP\right)y_c =
+P^T\left[\begin{array}{c} K \\ \lambda WL\end{array}\right]^T
+\left(\left[\begin{array}{c} b \\ 0 \end{array}\right] - \left[\begin{array}{c} K \\ \lambda
+      WL\end{array}\right]\hat{x}\right),
+\]
+where the right-hand side is the restriction of the residual in the
+normal equations associated with $\hat{x}$.  Using either of these to
+pose the coarse-grid problem within a multigrid cycle, all that
+remains is to specify the multigrid relaxation scheme and cycling
+parameters.  In all that follows, we consider only multigrid V-cycles,
+as W-cycles (or F-cycles) do not appear to be beneficial.
+
+In the diffusion-dominated regime, the solution of
+\eqref{eq:regularized} is primarily determined by the diffusive term
+and, as such, we propose a multigrid smoother that is appropriate for
+this term.  While classical AMG applied to \eqref{eq:normal} would
+typically use a Gauss-Seidel relaxation scheme, this is not
+appropriate here, since it would require knowledge of the (dense)
+lower-triangular part of $K^TK$.  Instead, we use a red-black-ordered
+Jacobi iteration, which allows us to make use of efficient
+matrix-vector products with $K$ and $WL$ and their transposes.
+Following reduction-based multigrid ideas \cite{}, we use only a
+single sweep of pre-relaxation, in a CF ordering, first computing
+updates to the coarse-grid points, then to those points on the fine
+grid that are not directly represented on the coarse grid.  For each
+of these sub-sweeps, we compute a full residual of the rectangular
+form of the system,
+\[
+\hat{r} = \left[\begin{array}{c} b \\ 0 \end{array}\right] -
+\left[\begin{array}{c} K \\ \lambda WL\end{array}\right]\hat{x}
+\]
+but then compute a Jacobi-like update at only the points, $j$, under
+consideration, as
+\[
+\hat{x}_j + {\left(\left[\begin{array}{cc} K^T & \lambda
+      L^TW\end{array}\right]\hat{r}\right)_j}/{ \left(K^TK +
+  \lambda^2L^TW^2L\right)_{jj}}.
+\]
+We note that this requires computing only part of the matrix-vector
+product with $\left[\begin{array}{cc} K^T & \lambda
+    L^TW\end{array}\right]$ and the diagonal entries of $K^TK +
+\lambda^2L^TW^2L$.  With this approach, a CF sweep of relaxation costs
+the same as 3/2 matrix-vector products with the normal equations (when
+done implicitly using the sparse matrices $K$ and $WL$).
+
+Numerical experiments below show that this is an efficient relaxation
+scheme for the problem, leading to good multigrid convergence, only
+for sufficiently large $\lambda$.  In the second case, when the two
+terms are more in balance, the multigrid approach can still be
+effective, but the CF relaxation scheme is no longer appropriate,
+since the diffusion term is not dominant.  Here, to better reflect the
+impact of $K$ on the linear system, we use the CG algorithm as a
+relaxation scheme, taking five steps of CG on the normal equations
+(with no preconditioner).  Probably need some references here about
+using CG as a smoother - Wim's papers on Helmholtz + GMRES, Randy Bank
+paper, Xuejun Xu cascadic MG paper???...
+
+We note that the interpolation and coarse-grid operators used above do
+not depend on $\lambda$ and, thus, can be formed once for each choice
+of $W$ and reused for all values of $\lambda$ for which a multigrid
+iteration is needed.
+
+When $\lambda$ is small compared to $\frac{\sigma(K)}{\sigma(WL)}$,
+then the problem is essentially equivalent to the unregularized
+problem $min_x \|Kx-b\|^2$.  In this case, ... Here, we rely on the
+fact that the outer (nonlinear) iteration is aiming to choose $W$ so
+that the two terms are in balance.  Thus, while it is important to get
+a sufficiently accurate solution when $\lambda$ is small to drive the
+nonlinear iteration, we are not concerned with getting high levels of
+accuracy in this case (since it occurs only early in the outer
+(nonlinear) iteration).  In this case, there is little expected
+benefit from a coarse-grid correction based on the diffusive term, so
+we consider only a simple iteration.  We use unpreconditioned CG on
+the normal equations, allowing up to 50 steps.  In practice, this
+yields relatively little improvement on using the solution from the
+next-largest $\lambda$ value as the initial guess, and the improvement
+to be gained decreases as $\lambda$ does.
+
+{\bf Ask Misha if there's something more reasonable to be done in the
+  case of smallest values of $\lambda$.}
+
+
+\section{Numerical Results}
+
+\subsection{Deblurring?}
+
+\subsection{Radon Transform}
+
+Current example.  Play with noise level (once L-curve selection is
+back in).
+
+\subsection{Another example?}
+
+\section{Conclusions}
+
+
+\end{document}
