@@ -1,6 +1,20 @@
+Multigrid methods are optimal solvers for systems arising from the
+discretization of elliptic PDEs. As noted before in \eqref{eq:normal}
+the second matrix $L^T W^2 L$ corresponds to a variable-coefficient
+diffusion operator on a two-dimensional grid. This can be treated
+using multigrid. The variable coefficients that pose problems to
+geometric multigrid methods can be treated using algebraic multigrid
+that selects the coarse grid variables to treat this variability properly.
 
-For fixed $W$, the problem posed in \eqref{eq:regularized} can be
-considered in 3 regimes.
+The first matrix in \eqref{eq:normal} corresponds to the operator that
+has to be inverted. Usually, this is an integral operator, that is not
+treated properly by algebraic multigrid. As the effective ratio
+between the first and the second matrix in the system to be solved
+depends on $\lambda$ we base our solver choice on the size of lambda
+relative to the size of the singular values of $K^T K$ and $L^T W^2
+L$.
+
+For fixed $W$, the problem posed in \eqref{eq:regularized} is considered in 3 regimes:
 \begin{enumerate}
 \item When $\lambda > C \frac{\sigma(K)}{\sigma{WL}}$, where
   $\sigma(K)$ is the largest singular value of $K$ and $\sigma{WL}$ is
@@ -13,34 +27,19 @@ considered in 3 regimes.
 \item When $\lambda < c \frac{\sigma(K)}{\sigma{WL}}$, the data term
   in \eqref{eq:regularized} is dominant.
 \end{enumerate}
-For each of these cases, a different solution strategy is optimal.
 
-In the first two cases, the presence of a significant diffusive term
-in \eqref{eq:regularized} suggests the use of a multigrid approach.
-Here, we make use of the equivalence between the formulations in
-\eqref{eq:regularized} and \eqref{eq:normal}, designing an algorithm
-that applies directly to the sparse matrices in
-\eqref{eq:regularized}, but equivalent to constructing an algebraic
-multigrid hierarchy \cite{} based on \eqref{eq:normal}.
-
-Considering the matrix $A = L^TW^2L$, which corresponds to a
-variable-coefficient diffusion operator on a two-dimensional grid,
-classical algebraic multigrid (AMG) is well-known to be an efficient
-algorithm for the solution of linear systems $Au=f$.  Here, we apply a
-standard AMG setup phase to $A$ to create a hierarchy of interpolation
-operators, $P$, and coarse-grid operators, $A_c = P^TAP$ (using
-Galerkin coarsening).  From these interpolation operators, we also
-create {\it one-sided} coarse-grid operators $K_c = KP$ and $(WL)_c =
-WLP$, at all levels in the multigrid hierarchy.  This allows us to
-write down the coarse-grid correction process for a multigrid
-algorithm, by taking a current approximation, $\hat{x}$, and asking to
-solve for a correction in the range of $P$:
+In the first two cases, the diffusive term is significant, so the use
+of a mulitigrid method is viable. We construct a multigrid method for
+the regularized problem \eqref{eq:regularized} by reducing the size of
+our solution, only. In terms of the block least-squares formulation
+\eqref{eq:block-ls} the coarse grid correction corresponds to finding
+a correction in the range of $P$ minimizing
 \[
 \min_{y_c}\left\| \left[\begin{array}{c} K \\ \lambda
       WL\end{array}\right](\hat{x}+Py_c) - \left[\begin{array}{c} b \\ 0 \end{array}\right]\right\|^2.
 \]
-Computing the minimum, we characterize the coarse-grid solution $y_c$
-as the solution to
+Due to the equivalence of the least-squares problem and the solution
+of the normal equations \eqref{eq:normal} the coarse-grid solution $y_c$ is then characterized as the solution to
 \[
 \left(P^TK^TKP + \lambda^2P^TL^TW^2LP\right)y_c =
 P^T\left[\begin{array}{c} K \\ \lambda WL\end{array}\right]^T
@@ -48,11 +47,24 @@ P^T\left[\begin{array}{c} K \\ \lambda WL\end{array}\right]^T
       WL\end{array}\right]\hat{x}\right),
 \]
 where the right-hand side is the restriction of the residual in the
-normal equations associated with $\hat{x}$.  Using either of these to
-pose the coarse-grid problem within a multigrid cycle, all that
-remains is to specify the multigrid relaxation scheme and cycling
-parameters.  In all that follows, we consider only multigrid V-cycles,
-as W-cycles (or F-cycles) do not appear to be beneficial.
+normal equations associated with $\hat{x}$.
+
+The equivalence of the formulations allows to design a multigrid
+algorithms for the normal equations \eqref{eq:normal}, and apply it
+directly to the sparse matrices in \eqref{eq:regularized}. As $K^TK$
+can get dense, this results in a tremendous reduction of compute time,
+further efficient implementations of the application of $K$, e.g.,
+using fast transformations, can be used directly.
+
+To obtain $P$, only the matrix $A = L^T W^2 L$ is considered. We apply a
+standard AMG setup phase to $A$ to create a hierarchy of interpolation
+operators, $P$, and coarse-grid operators, $A_c = P^TAP$ (using
+Galerkin coarsening).  From these interpolation operators, we also
+create the \textit{one-sided} coarse-grid operators $K_c = KP$ and $(WL)_c =
+WLP$, at all levels in the multigrid hierarchy. All that remains is to
+specify the multigrid relaxation scheme and cycling parameters.  In
+all that follows, we consider only multigrid V-cycles, as W-cycles (or
+F-cycles) do not appear to be beneficial.
 
 In the diffusion-dominated regime, the solution of
 \eqref{eq:regularized} is primarily determined by the diffusive term

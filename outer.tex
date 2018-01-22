@@ -10,10 +10,11 @@ the second term is a regularization term.  Here, $L$ is a discrete
 gradient matrix, and $W$ is a diagonal weighting matrix with weights
 in the range of $[0,1]$.  An equivalent formulation comes from first
 writing this as a rectangular block least-squares problem,
-\[
-\min_{x} \left\| \left[\begin{array}{c} K \\ \lambda
-      WL\end{array}\right]x - \left[\begin{array}{c} b \\ 0 \end{array}\right]\right\|^2,
-\]
+\begin{equation}
+  \label{eq:block-ls}
+  \min_{x} \left\| \left[\begin{array}{c} K \\ \lambda
+                           WL\end{array}\right]x - \left[\begin{array}{c} b \\ 0 \end{array}\right]\right\|^2,
+\end{equation}
 and, then, consider the resulting normal equations,
 \begin{equation}
 \label{eq:normal}
