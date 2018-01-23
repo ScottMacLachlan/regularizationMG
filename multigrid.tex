@@ -1,10 +1,79 @@
 Multigrid methods are optimal solvers for systems arising from the
-discretization of elliptic PDEs. As noted before in \eqref{eq:normal}
-the second matrix $L^T W^2 L$ corresponds to a variable-coefficient
-diffusion operator on a two-dimensional grid. This can be treated
-using multigrid. The variable coefficients that pose problems to
-geometric multigrid methods can be treated using algebraic multigrid
-that selects the coarse grid variables to treat this variability properly.
+discretization of elliptic PDEs. Geometric multigrid methods make use of the
+following observation: When an iterative method like Gauss-Seidel is
+applied to a linear system
+\[
+  A x = b, A \in \mathbb{R}^{n \times n}, x, b \in \mathbb{R}^n,
+\]
+arising from the discretization of a PDE, the reduction of the error
+is relatively slow and depends on the discretization parameter
+$h$. Nevertheless, the error $e = A^{-1} b - x$ is smooth after only a
+few iterations of the iterative method. Obviously, a smooth error can
+be represented well on a coarser mesh. Using the residual
+$r = b - A x$ we have $A e = r$, if a coarse representation $A_c$ of
+$A$ and $r_c$ of $R$ is available, the system $A_c e_c = r_c$ can be
+solved and the solution is less expensive. The restriction of $r$ to
+$r_c$ can be obtained by simple injection or by more complicated
+schemes like, e.g., full-weighting. The coarse grid operator $A_c$ is
+obtained by using a rediscretization of the continuous operator on the
+coarser mesh, or by using a variational principle resulting in the
+Galerkin operator. The error $e_c$ on the coarse mesh is then
+interpolated to the fine one, yielding an approximation
+$\tilde{e}$. Finally, the current approximate solution can be updated
+as $x = x + \tilde{e}$. As the interpolation process introduces high
+frequency error components in the approximate solution, a couple of
+additional smoothing steps is applied. The resulting method is called
+\emph{two-grid} method. The idea can be applied recursively on level
+$\ell$ to solve the coarse system $A_{\ell+1} e_{\ell+1} = r_{\ell+1}$
+using $\gamma$ iterations of the described method on the subsequent
+level $\ell+1$, resulting in a multigrid method. For given smoothers
+$\mathcal{S}_\ell$ and $\tilde{\mathcal{S}}_\ell$,
+$\ell = 0,\dots,\ell_\text{max}$, $\nu_1$ and $\nu_2$ pre- and
+post-smoothing steps and restriction and prolongation operators
+$R_\ell$ and $P_\ell$, $\ell = 1,\dots,\ell_{\text{max}-1}$ the
+multigrid algorithm can be found in Algorithm~\ref{alg:mg}.
+
+\begin{algorithm}
+  \caption{Multigrid cycle $x_\ell = \mathcal{MG}_\ell(x_\ell,b_\ell)$}
+  \label{alg:mg}
+  \begin{algorithmic}
+    \STATE{$x_\ell \leftarrow
+      \mathcal{S}_\ell^{\nu_1}(x_\ell,b_\ell)$}
+    \STATE{$r_\ell \leftarrow b_\ell - A_\ell
+      x_\ell$}
+    \STATE{$r_{\ell+1} \leftarrow R_\ell r_\ell$}
+    \STATE{$e_{\ell+1} \leftarrow 0$}
+    \IF{$\ell+1 = \ell_\text{max}$}
+    \STATE{$e_{\ell_\text{max}} \leftarrow
+      A_{\ell_\text{max}}^{-1} r_{\ell_\text{max}}$}
+  \ELSE
+%  \FOR{$j = 1,\dots,\xi$}
+  \STATE{$e_{\ell+1} \leftarrow
+    \mathcal{MG}_{\ell+1}(e_{\ell+1},r_{\ell+1})$}
+%  \ENDFOR
+  \ENDIF
+  \STATE{$e_\ell \leftarrow P_\ell e_{\ell+1}$}
+  \STATE{$x_\ell \leftarrow x_\ell +
+    e_\ell$}
+  \STATE{$x_\ell \leftarrow
+    \tilde{\mathcal{S}}_\ell^{\nu_2}(x_\ell,b_\ell)$}
+  \end{algorithmic}
+\end{algorithm}
+
+In case that the coarsening is not easily determined geometrically, an
+algebraic multigrid method (AMG) can be used. For a given smoother
+classical AMG automatically selects coarse mesh points and the
+necessary restriction and prolongation operators. AMG for symmetric
+problems usually chooses $R_\ell = P_\ell^T$, the coarse grid operator
+is chosen to be the Galerkin coarse grid operator given by
+$A_{\ell+1} = P_\ell^T A_\ell P_\ell$.
+
+As noted before the second matrix $L^T W^2 L$ in \eqref{eq:normal}
+corresponds to a variable-coefficient diffusion operator on a
+two-dimensional grid. This can be treated using multigrid. The
+variable coefficients that pose problems to geometric multigrid
+methods can be treated using algebraic multigrid that selects the
+coarse grid variables to treat this variability properly.
 
 The first matrix in \eqref{eq:normal} corresponds to the operator that
 has to be inverted. Usually, this is an integral operator, that is not
