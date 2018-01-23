@@ -1,6 +1,6 @@
 We consider the solution of discrete ill-posed problems with linear forward model of the form~\cite{Hansenbk}
-\begin{equation} \label{eq:exact} A x = b = b^{true} + e,  \qquad Ax^{true} = b^{true},\end{equation} 
-where the forward operator $A \in \mathbb{R}^{M \times N}$ has singular values that decay 
+\begin{equation} \label{eq:exact} K x = b = b^{true} + e,  \qquad Kx^{true} = b^{true},\end{equation} 
+where the forward operator $K \in \mathbb{R}^{M \times N}$ has singular values that decay 
 rapidly towards zero with the singular vectors corresponding to the largest values representing smooth modes.  Here, the true data $b^{true}$ is unknown and the measured data $b$ has been corrupted by
 unknown additive white noise.   We would like to recover $x^{true}$, which in our applications 
 will be assumed to be the vectorized form of a digital image.   Due to the presence of the noise and the 
@@ -8,11 +8,11 @@ decay of the singular values, any least squares solution to (\ref{eq:exact}) wil
 noise, with the extent of noise corruption determined by the decay rate of the singular values as well as the noise level.  Moreover, if rank($A)< N$, then even without noise, there is no unique least squares solution.  
 
 To combat the (near) rank deficiency and the noise, it is typical to compute an approximate solution to $x^{true}$ from a suitably regularized Tikhonov \cite{Tikhonov} problem
-\begin{equation}   \label{eq:tikhgeneric} \min_{x} \| A x - b \|_2^2 + \lambda^2 \| R x \|_2^2  \end{equation}
+\begin{equation}   \label{eq:tikhgeneric} \min_{x} \| K x - b \|_2^2 + \lambda^2 \| R x \|_2^2  \end{equation}
 where $R$ denotes a regularization matrix that enforces an apriori property on the solution.   For example, if 
 $x$ is known to be smooth, one may take $R$ to be the identity, the discrete gradient operator $L$, or the discrete Laplacian, for example.  
 
-The parameter $\lambda$ is called the regularization parameter.  Since it controls the trade-off in the cost function between the data fidelity term $\| A x - b \|_2^2$ and the penalty term $\| R x \|_2^2$, it impacts  
+The parameter $\lambda$ is called the regularization parameter.  Since it controls the trade-off in the cost function between the data fidelity term $\| K x - b \|_2^2$ and the penalty term $\| R x \|_2^2$, it impacts  
 both the quality of the solution and, as we will make clear later, the approach we take in solving (\ref{eq:tikhgeneric}).
 
 {\bf Still need something about non-L2 based regularization.}
@@ -21,31 +21,31 @@ both the quality of the solution and, as we will make clear later, the approach 
 sections???}
 
 In this paper, we are interested in designing efficient solvers for the sequence of least regularized least squares problems
-\begin{equation} \label{eq:sequence} \min_{x} \| A x - b \|_2^2 + \lambda^2 \| R^{(i)} x \|_2^2 \end{equation}
+\begin{equation} \label{eq:sequence} \min_{x} \| K x - b \|_2^2 + \lambda^2 \| R^{(i)} x \|_2^2 \end{equation}
 or equivalently
-\[ \min_x \left\| \left[ \begin{matrix} A \\ \lambda R^{(i)} \end{matrix} \right] x - \left[ \begin{matrix} b \\ 0 \end{matrix} \right] \right\|_2 \]
+\[ \min_x \left\| \left[ \begin{matrix} K \\ \lambda R^{(i)} \end{matrix} \right] x - \left[ \begin{matrix} b \\ 0 \end{matrix} \right] \right\|_2 \]
 or 
-\[ (A^TA + \lambda^2 L^T (D^{(i)})^2 L ) x = A^T b \]
+\[ (K^TK + \lambda^2 L^T (W^{(i)})^2 L ) x = K^T b \]
 where 
-\[ R^{(i)} = D^{(i)} L \] 
-for $L$ the discrete gradient and $D^{(i)}$ is a diagonal weighting, and we asume the ``best'' value of the regularization parameter for this $i$th problem, $\lambda^{(i)}_{*}$, is {\bf not} known a priori.   Such problems
+\[ R^{(i)} = W^{(i)} L \] 
+for $L$ the discrete gradient, and $W^{(i)}$ is a diagonal weighting, and we asume the ``best'' value of the regularization parameter for this $i$th problem, $\lambda^{(i)}_{*}$, is {\bf not} known a priori.   Such problems
 frequently arise in situations where the weights would ideally be computed from the desired $x_{true}$, but as this is unknown the weights are recomputed adaptively from increasingly better estimates of the desired solution.    
 In our numerical examples, we consider two types of weightings from recent literature:  one which is designed to give solutions with ``sparse'' gradients \cite{IRLS} and one which is designed to preserve edges \cite{KilmerEtalICIAM15}.  
 
 We will consider only
 one well-known heuristic for estimating $\lambda^{(i)}_*$ -- the L-curve criterion -- but our solvers would also be applicable in scenarios where other selection mechanisms are used.       
-The L-curve \cite{OlearyHansen,etc} is a parametric plot of $( \log_10 \|A x_{\lambda} - b \|_2,\log_10 \| R^{(i)} x_{\lambda} \|_2)$ as a function of $\lambda$.   The general idea is that the point of maximum positive curvature occurs where there is a good balance between the effect of the regularization term and data-fidelity term.   (Forward reference to a plot in the paper).   
+The L-curve \cite{OlearyHansen,etc} is a parametric plot of $( \log_10 \|K x_{\lambda} - b \|_2,\log_10 \| R^{(i)} x_{\lambda} \|_2)$ as a function of $\lambda$.   The general idea is that the point of maximum positive curvature occurs where there is a good balance between the effect of the regularization term and data-fidelity term.   (Forward reference to a plot in the paper).   
 
 The obvious approach is to ``solve'' on of the equivalent forms of (\ref{eq:sequence}) for a few choices of $\lambda$ and then plot the curve.   If implemented naively, however, this is expensive because
    \begin{itemize}
-      \item When $\lambda$ is small,   $\left[ \begin{matrix} A \\ \lambda R^{(i)} \end{matrix} \right] $ is likely to be ill-conditioned, as the emphasis is on the ill-conditioned top block.   Thus, many iterations are required for an {\it accurate} solution.
+      \item When $\lambda$ is small,   $\left[ \begin{matrix} K \\ \lambda R^{(i)} \end{matrix} \right] $ is likely to be ill-conditioned, as the emphasis is on the ill-conditioned top block.   Thus, many iterations are required for an {\it accurate} solution.
       \item When $\lambda$ is large, the emphasis is on the bottom block, but as $i$ increases, $R^{(i)}$ tends
       to be ill-conditioned due to more accurate diagonal weighting and near zero terms.
       \end{itemize}
       
 
-Alternatively, hybrid iterative methods for the class of regularization operators we consider ($R^{(i)}$ rectangular with possible non-trivial null-space) we consider, in which $x$ is constrained to live in a k-dimensional subspace whose basis is generated by an iterative procedure for (\ref{eq:sequence}), have been proposed \cite{KilmerEspanolHansen,KilmerEtalICIAM15}.  Related methods, not immediately applicable for the case of non-rectangular $A$ and $L$ we consider here, are given in \cite{SilvaNagy15}.   Hybrid
-methods have an advantage that, given a suitable $k$, the value of $\lambda_*^{(i)}$ can be chosen for the k-dimensional projected problem very cheaply, and only one subspace is needed/created for all values of $\lambda$.   The cost of the hybrid methods varies by algorithm, but matrix vector products with $A, R^{(i)}$ and their transposes are a necessary evil, and thus the minimum cost of any of these methods is $k$ times the sum of the costs for those products.   (MEK:  need to clean this up.  emphasize non-square A, L, means must use my appraoch, but and potential expense of our hybrid method and the fact other hybrids won't work unless you could transform to standard form, then you need A-weighted pseudoinverse which is very expensive per iteration.) 
+Alternatively, hybrid iterative methods for the class of regularization operators we consider ($R^{(i)}$ rectangular with possible non-trivial null-space) we consider, in which $x$ is constrained to live in a k-dimensional subspace whose basis is generated by an iterative procedure for (\ref{eq:sequence}), have been proposed \cite{KilmerEspanolHansen,KilmerEtalICIAM15}.  Related methods, not immediately applicable for the case of non-rectangular $K$ and $L$ we consider here, are given in \cite{SilvaNagy15}.   Hybrid
+methods have an advantage that, given a suitable $k$, the value of $\lambda_*^{(i)}$ can be chosen for the k-dimensional projected problem very cheaply, and only one subspace is needed/created for all values of $\lambda$.   The cost of the hybrid methods varies by algorithm, but matrix vector products with $K, R^{(i)}$ and their transposes are a necessary evil, and thus the minimum cost of any of these methods is $k$ times the sum of the costs for those products.   (MEK:  need to clean this up.  emphasize non-square A, L, means must use my appraoch, but and potential expense of our hybrid method and the fact other hybrids won't work unless you could transform to standard form, then you need A-weighted pseudoinverse which is very expensive per iteration.) 
 
 Our goal in this paper is to modify the ``obvious'' approach so that it is provides a computationally viable algorithm.
 Ingredients:
@@ -54,13 +54,3 @@ Ingredients:
      \item Non-exact solves with $\lambda$ small (possibly combined with preconditioner for $A^TA$?  ), just to know enough about the l-curve to find the corner
      \item Leveraging properites of the l-curves as functions of $i$ to prune $\lambda$
      \end{itemize} 
-          
-
-    
-
-
-
-
-
-
-

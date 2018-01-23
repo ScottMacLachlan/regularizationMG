@@ -1,3 +1,11 @@
-In this paper, we consider an iterative approach to the solution of
-problems arising from the use of non-quadratic regularization terms.
-In particular, we consider an adaptive reweighting strategy, 
+In this paper, we focus on an iterative approach to the solution of
+ill-posed problems arising from the use of non-quadratic
+regularization terms.  Consider the regularized system
+\[
+\min_x \|Kx-b\|^2 + \lambda^2 \mathcal{R}(x),
+\]
+where $\mathcal{R}(x)$ is some regularization term and $\lambda$ is
+the regularization parameter, to be chosen using a standard L-curve
+approach \cite{OlearyHansen,etc} or other means.  We specifically
+consider the case where $\mathcal{R}(x) \approx \|Lx\|_\ast^2$, for
+some norm (or weaker measure) applied to the discrete gradient of $x$.
