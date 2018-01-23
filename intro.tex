@@ -15,6 +15,11 @@ $x$ is known to be smooth, one may take $R$ to be the identity, the discrete gra
 The parameter $\lambda$ is called the regularization parameter.  Since it controls the trade-off in the cost function between the data fidelity term $\| A x - b \|_2^2$ and the penalty term $\| R x \|_2^2$, it impacts  
 both the quality of the solution and, as we will make clear later, the approach we take in solving (\ref{eq:tikhgeneric}).
 
+{\bf Still need something about non-L2 based regularization.}
+
+{\bf After this point, probably everything gets absorbed into other
+sections???}
+
 In this paper, we are interested in designing efficient solvers for the sequence of least regularized least squares problems
 \begin{equation} \label{eq:sequence} \min_{x} \| A x - b \|_2^2 + \lambda^2 \| R^{(i)} x \|_2^2 \end{equation}
 or equivalently
