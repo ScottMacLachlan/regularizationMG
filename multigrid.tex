@@ -9,20 +9,21 @@ arising from the discretization of a PDE, the reduction of the error
 is relatively slow and depends on the discretization parameter
 $h$. Nevertheless, the error $e = A^{-1} b - x$ is smooth after only a
 few iterations of the iterative method. Obviously, a smooth error can
-be represented well on a coarser mesh. Using the residual
-$r = b - A x$ we have $A e = r$, if a coarse representation $A_c$ of
-$A$ and $r_c$ of $R$ is available, the system $A_c e_c = r_c$ can be
-solved and the solution is less expensive. The restriction of $r$ to
-$r_c$ can be obtained by simple injection or by more complicated
-schemes like, e.g., full-weighting. The coarse grid operator $A_c$ is
-obtained by using a rediscretization of the continuous operator on the
-coarser mesh, or by using a variational principle resulting in the
-Galerkin operator. The error $e_c$ on the coarse mesh is then
-interpolated to the fine one, yielding an approximation
-$\tilde{e}$. Finally, the current approximate solution can be updated
-as $x = x + \tilde{e}$. As the interpolation process introduces high
-frequency error components in the approximate solution, a couple of
-additional smoothing steps is applied. The resulting method is called
+be represented well on a coarser mesh. Using the definition of the
+residual $r = b - A x$ we can obtain the error as the solution of
+$A e = r$. If a coarse representation $A_c$ of $A$ and $r_c$ of $R$ is
+available, the system $A_c e_c = r_c$ can be solved instead and the
+solution is less expensive. The restriction of $r$ to $r_c$ can be
+obtained by simple injection or by more complicated schemes like,
+e.g., full-weighting. The coarse grid operator $A_c$ is obtained by
+using a rediscretization of the continuous operator on the coarser
+mesh, or by using a variational principle resulting in the Galerkin
+operator. The error $e_c$ on the coarse mesh is then interpolated to
+the fine one, yielding an approximation $\tilde{e}$. Finally, the
+current approximate solution can be updated as $x = x + \tilde{e}$. As
+the interpolation process introduces high frequency error components
+in the approximate solution, in most cases a couple of additional
+smoothing steps is applied. The resulting method is called
 \emph{two-grid} method. The idea can be applied recursively on level
 $\ell$ to solve the coarse system $A_{\ell+1} e_{\ell+1} = r_{\ell+1}$
 using $\gamma$ iterations of the described method on the subsequent
@@ -70,10 +71,7 @@ $A_{\ell+1} = P_\ell^T A_\ell P_\ell$.
 
 As noted before the second matrix $L^T W^2 L$ in \eqref{eq:normal}
 corresponds to a variable-coefficient diffusion operator on a
-two-dimensional grid. This can be treated using multigrid. The
-variable coefficients that pose problems to geometric multigrid
-methods can be treated using algebraic multigrid that selects the
-coarse grid variables to treat this variability properly.
+two-dimensional grid. This can be solved efficiently using algebraic multigrid.
 
 The first matrix in \eqref{eq:normal} corresponds to the operator that
 has to be inverted. Usually, this is an integral operator, that is not
@@ -121,9 +119,9 @@ normal equations associated with $\hat{x}$.
 The equivalence of the formulations allows to design a multigrid
 algorithms for the normal equations \eqref{eq:normal}, and apply it
 directly to the sparse matrices in \eqref{eq:regularized}. As $K^TK$
-can get dense, this results in a tremendous reduction of compute time,
-further efficient implementations of the application of $K$, e.g.,
-using fast transformations, can be used directly.
+can get dense, this results in a reduction of compute time, further
+efficient implementations of the application of $K$, e.g., using fast
+transformations, can be used directly.
 
 To obtain $P$, only the matrix $A = L^T W^2 L$ is considered. We apply a
 standard AMG setup phase to $A$ to create a hierarchy of interpolation
@@ -187,19 +185,17 @@ iteration is needed.
 
 When $\lambda$ is small compared to $\frac{\sigma(K)}{\sigma(WL)}$,
 then the problem is essentially equivalent to the unregularized
-problem $min_x \|Kx-b\|^2$.  In this case, ... Here, we rely on the
-fact that the outer (nonlinear) iteration is aiming to choose $W$ so
-that the two terms are in balance.  Thus, while it is important to get
-a sufficiently accurate solution when $\lambda$ is small to drive the
-nonlinear iteration, we are not concerned with getting high levels of
-accuracy in this case (since it occurs only early in the outer
-(nonlinear) iteration).  In this case, there is little expected
-benefit from a coarse-grid correction based on the diffusive term, so
-we consider only a simple iteration.  We use unpreconditioned CG on
-the normal equations, allowing up to 50 steps.  In practice, this
-yields relatively little improvement on using the solution from the
-next-largest $\lambda$ value as the initial guess, and the improvement
+problem $min_x \|Kx-b\|^2$. As the outer (nonlinear) iteration is
+aiming to choose $W$ such that both terms are in balance, this case is
+not the focus of this work. Nevertheless, to drive the nonlinear
+iteration a sufficiently accurate solution is required for small
+$\lambda$, as well. As this case occurs mainly early in the outer
+iterations, the accuracy does not have to be very high, though. To
+obtain a reasonable good approximation we use CG without
+preconditioner on the normal equations here, allowing up to 50
+iterations. Using the solution of the next-largest $\lambda$ value as
+the initial guess yields very little improvement, and the improvement
 to be gained decreases as $\lambda$ does.
 
-{\bf Ask Misha if there's something more reasonable to be done in the
-  case of smallest values of $\lambda$.}
+% {\bf Ask Misha if there's something more reasonable to be done in
+% the case of smallest values of $\lambda$.}
