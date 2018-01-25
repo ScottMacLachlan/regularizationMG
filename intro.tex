@@ -1,24 +1,5 @@
-We consider the solution of discrete ill-posed problems with linear forward model of the form~\cite{Hansenbk}
-\begin{equation} \label{eq:exact} K x = b = b^{true} + e,  \qquad Kx^{true} = b^{true},\end{equation} 
-where the forward operator $K \in \mathbb{R}^{M \times N}$ has singular values that decay 
-rapidly towards zero with the singular vectors corresponding to the largest values representing smooth modes.  Here, the true data $b^{true}$ is unknown and the measured data $b$ has been corrupted by
-unknown additive white noise.   We would like to recover $x^{true}$, which in our applications 
-will be assumed to be the vectorized form of a digital image.   Due to the presence of the noise and the 
-decay of the singular values, any least squares solution to (\ref{eq:exact}) will be contaminated by
-noise, with the extent of noise corruption determined by the decay rate of the singular values as well as the noise level.  Moreover, if rank($A)< N$, then even without noise, there is no unique least squares solution.  
 
-To combat the (near) rank deficiency and the noise, it is typical to compute an approximate solution to $x^{true}$ from a suitably regularized Tikhonov \cite{Tikhonov} problem
-\begin{equation}   \label{eq:tikhgeneric} \min_{x} \| K x - b \|_2^2 + \lambda^2 \| R x \|_2^2  \end{equation}
-where $R$ denotes a regularization matrix that enforces an apriori property on the solution.   For example, if 
-$x$ is known to be smooth, one may take $R$ to be the identity, the discrete gradient operator $L$, or the discrete Laplacian, for example.  
 
-The parameter $\lambda$ is called the regularization parameter.  Since it controls the trade-off in the cost function between the data fidelity term $\| K x - b \|_2^2$ and the penalty term $\| R x \|_2^2$, it impacts  
-both the quality of the solution and, as we will make clear later, the approach we take in solving (\ref{eq:tikhgeneric}).
-
-{\bf Still need something about non-L2 based regularization.}
-
-{\bf After this point, probably everything gets absorbed into other
-sections???}
 
 In this paper, we are interested in designing efficient solvers for the sequence of least regularized least squares problems
 \begin{equation} \label{eq:sequence} \min_{x} \| K x - b \|_2^2 + \lambda^2 \| R^{(i)} x \|_2^2 \end{equation}
