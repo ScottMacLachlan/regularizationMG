@@ -8,6 +8,7 @@ Repo for LaTeX source for manuscript describing a multigrid method for a class o
 * Plot data error (normalized against noise norm) and reg. error 
 * Second example: heart & lungs phantom??  MRI phantom??
 * Test new MG algorithm: robustness to noise and examples
+* Third(?) example: image deblurring, problem: Diagonal of K'K -> try out diag(P'diag(diag(K'K))P)
 
 ## Outline / writing tasks
 * Write introduction (Misha)
