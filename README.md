@@ -19,6 +19,7 @@ Repo for LaTeX source for manuscript describing a multigrid method for a class o
 * Deblurring: Spaniel
 * Noise levels: norm(noise)/norm(rhs) = 1e-2,2e-2,5e-2,1e-1 (whatever works)
 * Comparison of V(0,1), V(1,1), V(1,2), V(2,2) for one example
+* Show effect of using zero initial guess
 * Full L-curve vs. truncated
 * Graph of linear iterations vs. outer iterations (average over lambdas), one additional plot showing the behavior
 * Table of error vs. noise level
