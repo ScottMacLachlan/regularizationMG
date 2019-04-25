@@ -1,73 +1,86 @@
-Multigrid methods are optimal solvers for systems arising from the
-discretization of elliptic PDEs. Geometric multigrid methods make use of the
-following observation: When an iterative method like Gauss-Seidel is
-applied to a linear system
+Multigrid methods (see, for
+example, \cite{WLBriggs_VEHenson_SFMcCormick_2000a, UTrottenberg_etal_2001a}) are optimal solvers for systems arising from the
+discretization of elliptic PDEs. Geometric multigrid methods make use
+of the following observation: When an iterative method like (weighted)
+Jacobi or Gauss-Seidel is applied to a linear system
 \[
   A x = b, A \in \mathbb{R}^{n \times n}, x, b \in \mathbb{R}^n,
 \]
-arising from the discretization of a PDE, the reduction of the error
-is relatively slow and depends on the discretization parameter
-$h$. Nevertheless, the error $e = A^{-1} b - x$ is smooth after only a
-few iterations of the iterative method. Obviously, a smooth error can
-be represented well on a coarser mesh. Using the definition of the
-residual $r = b - A x$ we can obtain the error as the solution of
-$A e = r$. If a coarse representation $A_c$ of $A$ and $r_c$ of $R$ is
-available, the system $A_c e_c = r_c$ can be solved instead and the
-solution is less expensive. The restriction of $r$ to $r_c$ can be
-obtained by simple injection or by more complicated schemes like,
-e.g., full-weighting. The coarse grid operator $A_c$ is obtained by
-using a rediscretization of the continuous operator on the coarser
-mesh, or by using a variational principle resulting in the Galerkin
-operator. The error $e_c$ on the coarse mesh is then interpolated to
-the fine one, yielding an approximation $\tilde{e}$. Finally, the
-current approximate solution can be updated as $x = x + \tilde{e}$. As
-the interpolation process introduces high frequency error components
-in the approximate solution, in most cases a couple of additional
-smoothing steps is applied. The resulting method is called
-\emph{two-grid} method. The idea can be applied recursively on level
-$\ell$ to solve the coarse system $A_{\ell+1} e_{\ell+1} = r_{\ell+1}$
+arising from the discretization of a simple elliptic PDE, the
+reduction of the error is relatively slow and depends on the
+discretization parameter, $h$. Nevertheless, the error $e = A^{-1} b -
+x$ is smooth after only a few iterations of the iterative
+method. Obviously, a smooth error can be represented well on a coarser
+mesh. Using the definition of the residual $r = b - A x$ we can obtain
+the error as the solution of $A e = r$. If a coarse representation
+$A_c$ of $A$ and $r_c$ of $r$ is available, the system $A_c e_c = r_c$
+can be solved instead and the solution is less expensive. The
+restriction of $r$ to $r_c$ can be obtained by simple injection or by
+more complicated schemes such as, e.g., full-weighting. The coarse-grid
+operator, $A_c$, is obtained by using a rediscretization of the
+continuous operator on the coarser mesh, or by using a variational
+principle resulting in the Galerkin operator. The error, $e_c$, on the
+coarse mesh is then interpolated to the fine one, yielding an
+approximation $\tilde{e}$. Finally, the current approximate solution
+can be updated as $x = x + \tilde{e}$. As the interpolation process
+introduces high frequency error components in the approximate
+solution, in most cases a couple of additional relaxation steps are
+applied. The resulting method is called a
+\emph{two-grid} method.
+
+This idea can be applied recursively on level
+$k$ to solve the coarse system, $A_{k+1} e_{k+1} = r_{k+1}$,
 using $\gamma$ iterations of the described method on the subsequent
-level $\ell+1$, resulting in a multigrid method. For given smoothers
-$\mathcal{S}_\ell$ and $\tilde{\mathcal{S}}_\ell$,
-$\ell = 0,\dots,\ell_\text{max}$, $\nu_1$ and $\nu_2$ pre- and
-post-smoothing steps and restriction and prolongation operators
-$R_\ell$ and $P_\ell$, $\ell = 1,\dots,\ell_{\text{max}-1}$ the
+level $k+1$, resulting in a multigrid method. Given relaxation
+schemes on level $k$ specified by update operators,
+$\mathcal{S}_k$ and $\tilde{\mathcal{S}}_k$,
+$k = 0,\dots,k_\text{max}$, number of pre- and post-relaxation steps, $\nu_1$ and $\nu_2$, and restriction and prolongation operators,
+$R_k$ and $P_k$, $k = 1,\dots,k_{\text{max}-1}$, a generic
 multigrid algorithm can be found in Algorithm~\ref{alg:mg}.
 
 \begin{algorithm}
-  \caption{Multigrid cycle $x_\ell = \mathcal{MG}_\ell(x_\ell,b_\ell)$}
+  \caption{Multigrid cycle $x_k = \mathcal{MG}_k(x_k,b_k)$}
   \label{alg:mg}
   \begin{algorithmic}
-    \STATE{$x_\ell \leftarrow
-      \mathcal{S}_\ell^{\nu_1}(x_\ell,b_\ell)$}
-    \STATE{$r_\ell \leftarrow b_\ell - A_\ell
-      x_\ell$}
-    \STATE{$r_{\ell+1} \leftarrow R_\ell r_\ell$}
-    \STATE{$e_{\ell+1} \leftarrow 0$}
-    \IF{$\ell+1 = \ell_\text{max}$}
-    \STATE{$e_{\ell_\text{max}} \leftarrow
-      A_{\ell_\text{max}}^{-1} r_{\ell_\text{max}}$}
+    \STATE{$x_k \leftarrow
+      \mathcal{S}_k^{\nu_1}(x_k,b_k)$}
+    \STATE{$r_k \leftarrow b_k - A_k
+      x_k$}
+    \STATE{$r_{k+1} \leftarrow R_k r_k$}
+    \STATE{$e_{k+1} \leftarrow 0$}
+    \IF{$k+1 = k_\text{max}$}
+    \STATE{$e_{k_\text{max}} \leftarrow
+      A_{k_\text{max}}^{-1} r_{k_\text{max}}$}
   \ELSE
 %  \FOR{$j = 1,\dots,\xi$}
-  \STATE{$e_{\ell+1} \leftarrow
-    \mathcal{MG}_{\ell+1}(e_{\ell+1},r_{\ell+1})$}
+  \STATE{$e_{k+1} \leftarrow
+    \mathcal{MG}_{k+1}(e_{k+1},r_{k+1})$}
 %  \ENDFOR
   \ENDIF
-  \STATE{$e_\ell \leftarrow P_\ell e_{\ell+1}$}
-  \STATE{$x_\ell \leftarrow x_\ell +
-    e_\ell$}
-  \STATE{$x_\ell \leftarrow
-    \tilde{\mathcal{S}}_\ell^{\nu_2}(x_\ell,b_\ell)$}
+  \STATE{$e_k \leftarrow P_k e_{k+1}$}
+  \STATE{$x_k \leftarrow x_k +
+    e_k$}
+  \STATE{$x_k \leftarrow
+    \tilde{\mathcal{S}}_k^{\nu_2}(x_k,b_k)$}
   \end{algorithmic}
 \end{algorithm}
 
 In case that the coarsening is not easily determined geometrically, an
-algebraic multigrid method (AMG) can be used. For a given smoother
-classical AMG automatically selects coarse mesh points and the
-necessary restriction and prolongation operators. AMG for symmetric
-problems usually chooses $R_\ell = P_\ell^T$, the coarse grid operator
-is chosen to be the Galerkin coarse grid operator given by
-$A_{\ell+1} = P_\ell^T A_\ell P_\ell$.
+algebraic multigrid method (AMG) can be
+used \cite{ABrandt_SFMcCormick_JWRuge_1984a, JWRuge_KStuben_1987a,
+KStuben_2001a}. For a given relaxation scheme, classical AMG
+automatically selects coarse mesh points and the necessary restriction
+and prolongation operators based on certain heuristics that are
+typically derived based on M-matrix or similar properties. AMG for
+symmetric problems usually chooses $R_k = P_k^T$, the coarse-grid
+operator is chosen to be the Galerkin coarse-grid operator given by
+$A_{k+1} = P_k^T A_k P_k$.  In what follows, we make use of components
+of the classical (Ruge-St\"uben) AMG algorithm as described
+in \cite{JWRuge_KStuben_1987a} and elsewhere, but within a somewhat
+nonstandard setup and solve phase, which are adapted to the problem
+setting at hand.  {\bf TODO: describe classical AMG?}
+
+\subsection{AMG for the regularized linear systems}
 
 As noted before the second matrix $L^T W^2 L$ in \eqref{eq:normal}
 corresponds to a variable-coefficient diffusion operator on a
@@ -99,7 +112,7 @@ In the first two cases, the diffusive term is significant, so the use
 of a mulitigrid method is viable. We construct a multigrid method for
 the regularized problem \eqref{eq:regularized} by reducing the size of
 our solution, only. In terms of the block least-squares formulation
-\eqref{eq:block-ls} the coarse grid correction corresponds to finding
+\eqref{eq:block-ls} the coarse-grid correction corresponds to finding
 a correction in the range of $P$ minimizing
 \[
 \min_{y_c}\left\| \left[\begin{array}{c} K \\ \lambda
