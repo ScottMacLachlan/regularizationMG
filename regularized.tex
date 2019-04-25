@@ -1,23 +1,10 @@
-\documentclass{article}
-\usepackage{amsmath,amsfonts,color,amsthm,ifpdf}
+\documentclass[review]{siamart171218}
+\usepackage{amsmath,amsfonts,color,ifpdf}
 \usepackage{algorithm,algorithmic}
-
-\ifpdf
- \usepackage[pdftex]{graphicx}
-\else
-  \usepackage[dvips]{graphicx}
-\fi
-
-% Margins for plain pagestyle
-\oddsidemargin=0.0in
-\textwidth=6.5in
-\textheight=9.0in
-\topmargin=-0.5in
-
-
+\usepackage{epsfig, graphicx}
 
 \title{Multigrid preconditioning for regularized least-squares problems}
-\author{Matthias Bolten, Misha E. Kilmer, and Scott P. MacLachlan}
+\author{Matthias Bolten \and Misha E. Kilmer \and Scott P. MacLachlan}
 
 \begin{document}
 \maketitle
@@ -48,11 +35,11 @@ different ranges of the regularization parameter value.  {\bf Pasted
 \section{Outer Iteration}
 \input{outer}
 
-\section{Multigrid Algorithm}
+\section{Multigrid Algorithm}\label{sec:multigrid}
 \input{multigrid}
 
 
-\section{Numerical Results}
+\section{Numerical Results}\label{sec:numerical}
 \input{numerical_results}
 
 \section{Conclusions}

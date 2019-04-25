@@ -1,7 +1,100 @@
-
-We consider the solution of the regularized problem
+To solve the problem above, we consider an iterative approach.  At the
+outermost level, we look to ``linearize'' the problem by solving a
+sequence of regularized linear iterations of the form
 \begin{equation}
 \label{eq:regularized}
+\min_{x^{(i)}} \|Kx^{(i)}-b\|^2 + \lambda_i^2\|W^{(i)}Lx^{(i)}\|^2,
+\end{equation}
+where $W^{(i)}$ is the weighting matrix associated with the
+$i^{\text{th}}$ iteration.  The outer iteration is driven by using the
+solution, $x^{(i)}$, to update the weight matrix, $W^{(i+1)}$, for the
+next outer iteration.  In \cite{OguzThesis, MishaSomething}, for
+example, the gradient of $x^{(i)}$ is computed, $v^{(i)} = Lx^{(i)}$,
+then normalized to have maximum-norm of 1.  A weight vector,
+$d^{(i)}$, is computed such that the $j^{\text{th}}$ component of
+$d^{(i)}$ is equal to zero if the $j^{\text{th}}$ component of the
+normalized $v^{(i)}$ is $\pm 1$.  For example, we can define $d$
+componentwise as $d^{(i)}_j = 1-\left(v^{(i)}_j\right)^2$, or
+$d^{(i)}_j = 1-\left|v^{(i)}_j\right|$.  Note that each element of
+$v^{(i)}$ corresponds to an edge connecting two pixels in the image
+given by $x^{(i)}$, and that $d^{(i)}_j$ will be zero for all edges
+corresponding to the maximum pairwise difference between adjacent
+values of those pixels.  Finally, $W^{(i)}$ is updated by defining the
+diagonal matrix, $\Lambda^{(i)}$, such that $\Lambda^{(i)}_{jj} =
+d^{(i)}_j$, and computing $W^{(i+1)} = \Lambda^{(i)}W^{(i)}$.  {\bf
+  TODO for Misha:} Is this the ``only'' way of doing this?  What's the
+literature here?  What else should we say/cite?
+
+For each outer iteration, as indexed by $i$, we employ an inner
+iteration, to be indexed by $\ell$, in order to select the
+regularization parameter, $\lambda_i$.  As is common in solving
+regularized inverse problems, to make this selection we use an L-curve
+algorithm \cite{Hansenbk}, where we select a set of values,
+$\left\{\lambda^{(\ell)}\right\}$, and solve the minimization problem
+for each value in the set, defining $x^{(i,\ell)}$ to be the minimizer
+of
+\begin{equation}
+  \label{eq:defining_xil}
+\|Kx^{(i,\ell)} - b\|_2^2 + \left(\lambda^{(\ell)}\right)^2\|W^{(i)}Lx^{(i,\ell)}\|_2^2.
+\end{equation}
+Then, $\lambda_i \in \left\{\lambda^{(\ell)}\right\}$ is chosen to
+balance the relative sizes of the two terms in the regularized
+functional.  {\bf Todo from April 25, 2019:} How much do we want to
+describe L-curves?  In my talk on this, I have a sample L-curve, and I
+could include that as a figure and discuss the general principle,
+unless there's a better plan...
+
+\subsection{Trimming the L-curve}
+
+Note that at each outer iteration, $i$, for each value of
+$\lambda^{(\ell)}$, we must solve a linear system to determine
+$x^{(i,\ell)}$.  Section \ref{sec:multigrid} details a robust
+algebraic multigrid algorithm that does this effectively for a range
+of problems, making as much reuse as possible of the construction of
+multigrid components.  While this iteration will be shown to be
+efficient and effective, there will always be a nontrivial cost to
+solving such a linear system, scaling at least linearly in the number
+of pixels in the image.  In order to further control the costs of the
+outer iterations (over both $i$ and $\ell$), we now introduce an
+algorithm to effectively ``trim'' the set of values
+$\left\{\lambda^{(\ell)}\right\}$ that needs to be activelt considered
+at each step of the outer iteration.
+
+As will be observed in Section \ref{sec:numerical}, the progression of
+values selected as $\lambda_i$ is observed to be monotonically
+increasing from the minimum of $\left\{\lambda^{(\ell)}\right\}$ at
+the first iteration to its final value.  ({\bf TODO: is it
+  monotonic?})  Thus, rather than considering all possible values of
+$\lambda^{(\ell)}$ at each iteration, we limit ourselves to a subset.
+This trimming, however, must be done carefully in order to not lose
+the ability to detect the corner of the L-curve from having too few
+data points, or only having data points on one ``leg'' of the curve.
+To do this, we consider the values $\lambda^{(\ell)}$ to be ordered
+increasingly from smallest (denoted $\lambda^{(1)}$) to largest (with
+all values assumed to be strictly positive).  For each outer
+iteration, $i$, we keep track of the index, $\ell_{i-1}$, of the
+regularization parameter chosen at iteration $i-1$ (with $\ell_0$
+taken to be $1$).  Then, at iteration $i$, we consider only a subset
+of $\left\{\lambda^{(\ell)}\right\}$ of size 10, ``centred'' at index
+$\ell_{i-1}$.  In general (when $\ell_{i-1}$ is not too close to
+either endpoint of the interval), we select those values with index
+satisfying $\ell_{i-1}-2 \leq \ell \leq \ell_{i-1}+7$, consistent with
+the expectation that $\ell_{i-1} \leq \ell_i$, but that some data for
+$\ell \leq \ell_{i-1}$ may be needed in order to accurately pick the
+corner of the L-curve.  When $\ell_{i-1}$ is close to either endpoint,
+the interval is simply shifted to the smallest or largest 10 values in
+$\left\{\lambda^{(\ell)}\right\}$.  In Section \ref{sec:numerical}, we
+will compare this approach to the brute-force approach of computing
+all values of $x^{i,\ell}$, showing that this can save significant
+computational time without sacrificing any accuracy in the computed
+solution.
+
+
+
+\subsection{Old text, from before April 25, 2019}
+We consider the solution of the regularized problem
+\begin{equation}
+\label{eq:regularized_old}
 \min_{x} \|Kx-b\|^2 + \lambda^2\|WLx\|^2,
 \end{equation}
 where the equation $Kx=b$ represents a ``data'' term, where $b$ is
