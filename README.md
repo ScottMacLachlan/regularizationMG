@@ -29,5 +29,5 @@ Repo for LaTeX source for manuscript describing a multigrid method for a class o
 * Description of problem setup and outer/inner algorithm
 * Description of the MG algorithm (Matthias/Scott)
 * Description of L-curve trimming (Scott?)
-* Numerical results
+* Numerical results (Matthias)
 * Conclusions
