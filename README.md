@@ -19,6 +19,12 @@ Repo for LaTeX source for manuscript describing a multigrid method for a class o
 * Deblurring: Spaniel
 * Noise levels: norm(noise)/norm(rhs) = 1e-2,2e-2,5e-2,1e-1 (whatever works)
 * Comparison of V(0,1), V(1,1), V(1,2), V(2,2) for 2e-2 noise Shepp Logan size=64
+* Presentation of results:
+  * Full angle Shepp Logan, like Fig. 5.3 in Misha's paper, including different sizes and noise-levels, inner iterations like slide 19 of Scott's 2017 Copper talk
+  * Table with different cycling strategies, eventually combined with initial guesses
+  * Iteration vs. lambda chosen with and without L-curve trimming, full-angle Shepp Logan
+  * Limited angle grains like Shepp Logan
+  * Deblurring like Shepp Logan
 * Show effect of using zero initial guess, same example
 * Full L-curve vs. truncated, same example
 * Graph of linear iterations vs. outer iterations (average over lambdas), one additional plot showing the behavior
