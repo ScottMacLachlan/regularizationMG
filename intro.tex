@@ -35,3 +35,31 @@ Ingredients:
      \item Non-exact solves with $\lambda$ small (possibly combined with preconditioner for $A^TA$?  ), just to know enough about the l-curve to find the corner
      \item Leveraging properites of the l-curves as functions of $i$ to prune $\lambda$
      \end{itemize} 
+
+ In \cite{Gazzola_etal_2020}, an inner-outer iteration scheme is
+ developed for the solution of \eqref{eq:sequence}, where the diagonal
+ weighting matrix is updated at each outer iteration, and a hybrid
+ method is used to find both the optimal regularization parameter,
+ $\lambda$, and solution of the resulting least-squares problem.  This
+ hybrid algorithm is based on joint bidiagonalization (cf.,
+ \cite{Kilmer_Hanson_Espanol_2007}), projecting the large
+ least-squares problem into a manageable subspace where $\lambda$ can
+ be selected by standard approaches (e.g., the discrepancy principle
+ or an L-curve criterion) and the minimizers of the projected problem
+ can be readily computed directly.  However, each step of the hybrid
+ iterative regularization requires two calls to another iterative
+ routine to determine a projection, and therefore each step of the
+ hybrid iterative regularization can be expensive.  Here, we consider
+ the same outer iteration as \cite{Gazzola_etal_2020}, but we replace
+ the single hybrid iterative routine with a new, two-pronged technique
+ aimed at improving the overall efficiency of the edge-preserving
+ algorithm.  First, we introduce an effective multigrid preconditioner
+ for the solution of the global least-squares problem for fixed
+ $\lambda$.  Secondly, we make use of the fact that we solve a
+ sequence of least-squares problems for different values of $\lambda$
+ to introduce improved initial guesses for the solution of each
+ problem, improving the overall efficiency of the
+ multigrid-preconditioned solves.  Finally, in this setting, we make
+ use of an observed relationship between the optimal regularization
+ parameters selected for each outer iteration to reduce the search
+ space for regularization parameters within the inner iteration.
