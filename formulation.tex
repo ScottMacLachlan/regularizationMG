@@ -42,7 +42,9 @@ Equation \eqref{eq:tikhgeneric} for many different values of $\lambda$
 and comparing the resulting solution set.
 
 In this paper, we focus on the case of edge-preserving regularization
-schemes \cite{CRVogel_2002a, Gazzola_etal_2020}, where the operator $L$ is chosen to allow sharp
+schemes \cite{CRVogel_2002a, Gazzola_etal_2020}, where the
+Tikhonov regularization operator, $\|Lx\|^2_2$, is replaced by another
+operator that allows sharp
 changes in the values of the solution, $x$, but only when those
 changes are deemed to form a ``natural edge'' in the recovered image.
 Deciding on whether or not such a jump is an edge is itself a complex
@@ -50,7 +52,7 @@ task, particularly without assuming more information on the problem
 structure than is preferable in a general-purpose algorithm.  Here, we
 follow the \textit{iteratively reweighted norm} (IRN) method, proposed
 in \cite{Gorodnitsky_Rao_1992} and further developed in
-\cite{Rodriguez_Wohlberg, RARenaut_etal_2017}. Here, a non-quadratic
+\cite{Rodriguez_Wohlberg, RARenaut_etal_2017}. In this approach, a non-quadratic
 constraint, such as $\|Lx\|_p^p$ for $p\approx 1$ or the total
 variation of $x$, $\mathrm{TV}(x)$, is reformulated as a sequence of
 quadratic regularization problems,
@@ -62,7 +64,76 @@ where $M^{\ell}$ is defined based on $L$ and the approximate solution
 of the $(\ell-1)$th problem, and $\lambda_\ell$ is chosen based on
 established approaches for the $\ell$th problem.
 
+We follow the form of the ``inner-outer'' iteration for
+edge preservation introduced in \cite{Gazzola_etal_2020}.  In this
+approach, there are 3 steps to each outer iteration:
+\begin{enumerate}
+\item Updating $M^{(\ell-1)}$ to form $M^{(\ell)}$,
+\item Choosing $\lambda_\ell$ to appropriately balance the data and
+  regularization terms in \eqref{eq:sequence}, and
+\item Solving the minimization problem in \eqref{eq:sequence} for the
+  optimal solution, $x^{(\ell)}$.
+\end{enumerate}
+As in \cite{Gazzola_etal_2020}, we form the sequence of quadratic
+regularization operators as diagonal scalings of the gradient matrix,
+$L$, defining $M^{(\ell)} = D^{(\ell)}L$, where $D^{(\ell)}$ is a
+diagonal matrix, itself formed by the update $D^{(\ell)} =
+\text{diag}(d^{(\ell)})D^{(\ell-1)}$, where $\text{diag}(d^{(\ell)})$
+denotes the diagonal matrix with entries given by those of the vector
+$d^{(\ell)}$.  Again following \cite{Gazzola_etal_2020}, we form
+$d^{(\ell)}$ by considering the solution at step $\ell-1$,
+$x^{(\ell-1)}$, and normalizing the gradient of the solution, defining
+\[
+g^{(\ell-1)} = |Lx^{(\ell-1)}| / \|Lx^{(\ell-1)}\|_\infty,
+\]
+where the absolute-value in the numerator is meant to denote an
+element-wise operation on the vector $Lx^{(\ell-1)}$.  Noting that the
+largest entries in $g^{(\ell-1)}$ take value 1 and should correspond
+to the dominant edges in image $x^{(\ell-1)}$, we then compute the
+entries in the weighting vector
+\[
+d^{(\ell)}_i = 1 - \left(g^{(\ell-1)}_i\right)^p,
+\]
+for a suitable choice of $p$ (here taken to be $p=2$).
 
-{\bf TODO April 25, 2019:} Need to revisit setup, so that we have a
-sequence of linear systems that arise from ``linearization''(?) of a
-nonlinear type problem that is driven as described in the below...
+In \cite{Gazzola_etal_2020}, a hybrid regularization approach
+\cite{Kilmer_Hanson_Espanol_2007} was used as an ``inner iteration''
+to solve for both $\lambda_\ell$ and $x^{(\ell)}$ once $M^{(\ell)}$ is
+determined.  In this approach, the bidiagonalization technique from
+\cite{Kilmer_Hanson_Espanol_2007} is used to create a basis set,
+$\{z^{(\ell)}_j\}_{j=1}^k$, such that
+\[
+AZ_k^{(\ell)} = U_{k+1}^{(\ell)}B_k^{(\ell)} \text{ and
+}M^{(\ell)}Z_k^{(\ell)} = \hat{U}_k^{(\ell)}\hat{B}_k^{(\ell)},
+\]
+where $Z_k^{(\ell)}$ is the matrix with columns given by
+$z^{(\ell)}_j$, $U_{k+1}^{(\ell)}$ and $\hat{U}_k^{(\ell)}$ are
+orthogonal matrices, and $B_k^{(\ell)}$ and $\hat{B}_k^{(\ell)}$ are
+bidiagonal matrices.  Restricting $x$ in \eqref{eq:sequence} to lie in
+the range of $Z_k^{(\ell)}$, $x = Z_k^{(\ell)}w$, leads to the
+$k$-dimensional approximation,
+\begin{equation}
+  \label{eq:sequence_hybrid}
+\min_{w} \| B_k^{(\ell)}w - \beta_1 e_1 \|_2^2 + \lambda_\ell^2 \| \hat{B}_k^{(\ell)} w \|_2^2,
+\end{equation}
+where $\beta_1 e_1 = \left(U_{k+1}^{(\ell)}\right)^Tb$.  In
+\cite{Gazzola_etal_2020}, a further iteration occurs where the value
+of $k$ is computed experimentally.  Here, a fixed set of values for
+$\lambda$ are considered, along with a sequence of values of $k$.  For
+each value of $k$ (increasing from the smallest), the set of problems
+in \eqref{eq:sequence_hybrid} are solved for each of the chosen values
+of$\lambda$, and the L-curve for this solution set is considered.  The
+final choice of $k$ is made by considering the corner of the L-curve,
+and stopping the iteration in $k$ when the estimated corner value
+stays constant.  While this is relatively efficient (since the
+individual problems used to form the L-curve are all low-dimensional
+and a short-term recurrence is used to form $Z_k^{(\ell)}$,
+$B_k^{(\ell)}$, and $\hat{B}_k^{(\ell)}$), it still incurs a
+substantial cost per iteration, since the basis in $Z_k^{(\ell)}$
+depends on $M^{(\ell)}$ and, therefore, cannot be reused for multiple
+outer iterations.  Here, we reconsider the solution of the set of
+problems in \eqref{eq:sequence}, using more direct approaches to the
+least-squares problems.
+
+{\bf TODO:} Misha should read and correct the above!
+
