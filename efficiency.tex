@@ -1,0 +1,19 @@
+In this section, we reexamine the inner-outer iteration scheme from
+\cite{Gazzola_etal_2020} with the goal of reducing its overall cost.
+There are two factors that drive the cost of this scheme.  First of
+all, there is the expensive computation of the joint bidiagonalization
+of $A$ and $M^{(\ell)}$, which essentially amounts to applying an
+unpreconditioned Krylov method to the problem, aiming to compute a
+``large enough'' basis in order to be able to use the resulting space
+to approximate solutions of \eqref{eq:sequence} for all values of
+$\lambda_\ell$ to be sampled.  Secondly, there is the reconstruction
+of approximate solutions for all values of $\lambda_\ell$ to be
+sampled once a suitable approximation space is created.  To address
+the first issue, we introduce a multigrid algorithm for the solution
+of problems as in \eqref{eq:sequence}.  To address the second, we
+introduce two key improvements in the selection of $\lambda_\ell$, by
+solving over fewer potential values for the regularization parameter
+and by using the iteration to introduce effective initial guesses for
+the necessary linear solves.
+
+

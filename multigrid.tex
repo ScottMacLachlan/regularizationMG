@@ -4,20 +4,20 @@ discretization of elliptic PDEs. Geometric multigrid methods make use
 of the following observation: When an iterative method like (weighted)
 Jacobi or Gauss-Seidel is applied to a linear system
 \[
-  A x = b, A \in \mathbb{R}^{n \times n}, x, b \in \mathbb{R}^n,
+  K x = b, K \in \mathbb{R}^{n \times n}, x, b \in \mathbb{R}^n,
 \]
 arising from the discretization of a simple elliptic PDE, the
 reduction of the error is relatively slow and depends on the
-discretization parameter, $h$. Nevertheless, the error $e = A^{-1} b -
+discretization parameter, $h$. Nevertheless, the error $e = K^{-1} b -
 x$ is smooth after only a few iterations of the iterative
 method. Obviously, a smooth error can be represented well on a coarser
-mesh. Using the definition of the residual $r = b - A x$ we can obtain
-the error as the solution of $A e = r$. If a coarse representation
-$A_c$ of $A$ and $r_c$ of $r$ is available, the system $A_c e_c = r_c$
+mesh. Using the definition of the residual $r = b - K x$ we can obtain
+the error as the solution of $K e = r$. If coarse representations,
+$K_c$ of $K$ and $r_c$ of $r$, are available, then the system $K_c e_c = r_c$
 can be solved instead and the solution is less expensive. The
 restriction of $r$ to $r_c$ can be obtained by simple injection or by
 more complicated schemes such as, e.g., full-weighting. The coarse-grid
-operator, $A_c$, is obtained by using a rediscretization of the
+operator, $K_c$, can be obtained using a rediscretization of the
 continuous operator on the coarser mesh, or by using a variational
 principle resulting in the Galerkin operator. The error, $e_c$, on the
 coarse mesh is then interpolated to the fine one, yielding an
@@ -28,9 +28,9 @@ solution, in most cases a couple of additional relaxation steps are
 applied. The resulting method is called a
 \emph{two-grid} method.
 
-This idea can be applied recursively on level
-$k$ to solve the coarse system, $A_{k+1} e_{k+1} = r_{k+1}$,
-using $\gamma$ iterations of the described method on the subsequent
+This idea can be applied recursively on each level, with level
+$k$ approximating the solution of the coarser system, $K_{k+1} e_{k+1} = r_{k+1}$,
+using $\gamma$ iterations of the described method on
 level $k+1$, resulting in a multigrid method. Given relaxation
 schemes on level $k$ specified by update operators,
 $\mathcal{S}_k$ and $\tilde{\mathcal{S}}_k$,
@@ -44,16 +44,16 @@ multigrid algorithm can be found in Algorithm~\ref{alg:mg}.
   \begin{algorithmic}
     \STATE{$x_k \leftarrow
       \mathcal{S}_k^{\nu_1}(x_k,b_k)$}
-    \STATE{$r_k \leftarrow b_k - A_k
+    \STATE{$r_k \leftarrow b_k - K_k
       x_k$}
     \STATE{$r_{k+1} \leftarrow R_k r_k$}
     \STATE{$e_{k+1} \leftarrow 0$}
     \IF{$k+1 = k_\text{max}$}
     \STATE{$e_{k_\text{max}} \leftarrow
-      A_{k_\text{max}}^{-1} r_{k_\text{max}}$}
+      K_{k_\text{max}}^{-1} r_{k_\text{max}}$}
   \ELSE
 %  \FOR{$j = 1,\dots,\xi$}
-  \STATE{$e_{k+1} \leftarrow
+  \STATE{For $i=1,\ldots,\gamma$, $e_{k+1} \leftarrow
     \mathcal{MG}_{k+1}(e_{k+1},r_{k+1})$}
 %  \ENDFOR
   \ENDIF
@@ -74,46 +74,98 @@ and prolongation operators based on certain heuristics that are
 typically derived based on M-matrix or similar properties. AMG for
 symmetric problems usually chooses $R_k = P_k^T$, the coarse-grid
 operator is chosen to be the Galerkin coarse-grid operator given by
-$A_{k+1} = P_k^T A_k P_k$.  In what follows, we make use of components
-of the classical (Ruge-St\"uben) AMG algorithm as described
+$K_{k+1} = P_k^T K_k P_k$.  Once this ``setup phase'' is complete, the
+AMG solution phase proceeds exactly as in the geometric MG setting, as
+described in Algorithm \ref{alg:mg}.
+
+In what follows, we make use of components of the classical
+(Ruge-St\"uben) AMG algorithm as described
 in \cite{JWRuge_KStuben_1987a} and elsewhere, but within a somewhat
 nonstandard setup and solve phase, which are adapted to the problem
-setting at hand.  {\bf TODO: describe classical AMG?}
+setting at hand.  Given a matrix, $K$, the coarse-grid is selected
+using a two-pass algorithm that partitions the degrees of freedom in
+$K$ into two disjoint sets, denoted as C and F.  First, a maximal
+independent set of the graph of the so-called strong connections in
+matrix $K$ is formed.  This amounts to first filtering the matrix $K$
+to remove entries where
+\[
+-k_{ij} \leq \theta \max_{m\neq i} \{-k_{im}\},
+\]
+where we take $\theta = 0.25$, as is commonly done.  The maximal
+independent set is then formed by a greedy algorithm that sequentially
+identifies the unsorted point with largest measure (initialized as
+number of strong connections), marks this as a C-point, then marks its
+as-yet unsorted strong neighbours as F-points and increments the
+measure of the unsorted strong neighbours of the F-points to make
+these more attractive for subsequent selection as C-points.  Given
+this tentative partitioning, a second-pass is performed, where
+additional points are moved from the F-set to the C-set, in order to
+satisfy heuristic measures that indicate an effective interpolation
+operator can be found.  Once the second pass has finalized the
+partitioning, the interpolation operator, $P$, is formed.  For each
+point in C, we assign a coarse-grid index to the point, and
+interpolate directly from the coarse-grid index to its corresponding
+point in C.  For interpolation to points in F, we make the assumption
+that we are interpolating errors that vary smoothly between strongly
+connected points, leading to an interpolation formula for each $i\in
+F$ of $e_i = \sum_{j\in C_i} w_{ij}e_j$, where $C_i$ is the set of
+points in C that are strongly connected to $i$.  The interpolation
+weights are given by
+\[
+w_{ij} = - \frac{k_{ij} + \displaystyle\sum_{m \in
+    F_i^s}\frac{k_{im}k_{mj}}{\sum_{l \in C_i} k_{ml}}}{k_{ii} +
+    \displaystyle\sum_{m \in F_i^w} k_{im}},
+\]
+where the set $F_i^s$ is the set of points in F that are strongly
+connected to $i$, while the set $F_i^w$ is defined so that all points
+adjacent to $i$ are contained in the disjoint union $C_i \cup
+F_i^s \cup F_i^w$.
 
 \subsection{AMG for the regularized linear systems}
 
-Considering Equation \eqref{eq:defining_xil}, we notice that an
-equivalent formulation for $x^{(i,\ell)}$ can be written as
+To clarify notation, we now rewrite \eqref{eq:sequence} to explictly
+introduce separate indices for the regularization parameter and outer
+iteration, defining $x^{(i,\ell)}$ as the vector that minimizes
+\[
+\| A x - b \|_2^2 + \left(\lambda^{(i)}\right)^2 \| M^{(\ell)} x \|_2^2.
+\]
+Notice that an equivalent formulation for $x^{(i,\ell)}$ is as the
+minimizer of
 \begin{equation}
 \label{eq:block-ls}
-\min_{x^{(i,\ell)}}\left\| \left[\begin{array}{c} K \\ \lambda^{(\ell)}
-                           W^{(i)}L\end{array}\right]x^{(i,\ell)} - \left[\begin{array}{c} b \\ 0 \end{array}\right]\right\|^2,
+\left\| \left[\begin{array}{c} A \\ \lambda^{(i)}
+                           M^{(\ell)}\end{array}\right]x - \left[\begin{array}{c} b \\ 0 \end{array}\right]\right\|^2,
 \end{equation}
 for which the normal equations are readily given by
 \begin{equation}
 \label{eq:normal}
-\left(K^TK + \left(\lambda^{(\ell)}\right)^2 L^T\left(W^{(i)}\right)^2L\right)x^{(i,\ell)} = K^Tb.
+\left(A^TA + \left(\lambda^{(i)}\right)^2 \left(M^{(\ell)}\right)^TM^{(\ell)}\right)x^{(i,\ell)} = A^Tb.
 \end{equation}
 The first matrix in \eqref{eq:normal} corresponds to the ``data'' term
 from the inverse problem, which is often an integral operator or
 non-differential operator that is difficult to treat directly using
 AMG due to its spectral properties and expected large number of
 nonzero entries per row.  In contrast, the second matrix
-in \eqref{eq:normal} represents a variable-coefficient diffusion
-operator, for which AMG techniques are expected to provide quite
-effective and efficient solvers.
+in \eqref{eq:normal},
+\[
+\left(M^{(\ell)}\right)^TM^{(\ell)} = L^T\left(D^{(\ell)}\right)^2L,
+\]
+represents a variable-coefficient diffusion operator, for which AMG
+techniques are expected to provide quite effective and efficient
+solvers.
 
 As a first observation, we note that for large-enough values of
-$\lambda^{(\ell)}$, the system will be dominated by its second
+$\lambda^{(i)}$, the system will be dominated by its second
 component.  This motivates the design of an AMG-based algorithm to
-solve \eqref{eq:normal}.  As noted above, however, directly applying
-AMG to $K^TK + \left(\lambda^{(\ell)}\right)^2
-L^T\left(W^{(i)}\right)^2L$ is unlikely to provide an effective
-preconditioner, due to the cost of applying the underlying graph
-algorithms to the much denser matrix coming from $K^TK$.  Here, we
-propose a ``hybrid'' multigrid approach, that takes advantage of the
-better sparsity of the rectangular sparsity in \eqref{eq:block-ls}
+solve \eqref{eq:normal}.  However, directly applying
+AMG to $A^TA + \left(\lambda^{(i)}\right)^2
+L^T\left(D^{(\ell)}\right)^2L$ is unlikely to be effective, due to the cost of applying the underlying graph
+algorithms to the much denser matrix coming from $A^TA$.  Here, we
+propose an alternative approach, that takes advantage of the
+better sparsity of the rectangular operator in \eqref{eq:block-ls}
 over the normal operator in \eqref{eq:normal}.
+
+% SM stopped editing here 4/11/2020
 
 The coarse-grid correction algorithm arises from applying classical
 AMG to the ``regularization'' term in \eqref{eq:normal},
