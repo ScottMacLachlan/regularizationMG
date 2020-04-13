@@ -1,133 +1,68 @@
-To solve the problem above, we consider an iterative approach.  At the
-outermost level, we look to ``linearize'' the problem by solving a
-sequence of regularized linear iterations of the form
-\begin{equation}
-\label{eq:regularized}
-\min_{x^{(i)}} \|Kx^{(i)}-b\|^2 + \lambda_i^2\|W^{(i)}Lx^{(i)}\|^2,
-\end{equation}
-where $W^{(i)}$ is the weighting matrix associated with the
-$i^{\text{th}}$ iteration.  The outer iteration is driven by using the
-solution, $x^{(i)}$, to update the weight matrix, $W^{(i+1)}$, for the
-next outer iteration.  In \cite{OguzThesis, MishaSomething}, for
-example, the gradient of $x^{(i)}$ is computed, $v^{(i)} = Lx^{(i)}$,
-then normalized to have maximum-norm of 1.  A weight vector,
-$d^{(i)}$, is computed such that the $j^{\text{th}}$ component of
-$d^{(i)}$ is equal to zero if the $j^{\text{th}}$ component of the
-normalized $v^{(i)}$ is $\pm 1$.  For example, we can define $d$
-componentwise as $d^{(i)}_j = 1-\left(v^{(i)}_j\right)^2$, or
-$d^{(i)}_j = 1-\left|v^{(i)}_j\right|$.  Note that each element of
-$v^{(i)}$ corresponds to an edge connecting two pixels in the image
-given by $x^{(i)}$, and that $d^{(i)}_j$ will be zero for all edges
-corresponding to the maximum pairwise difference between adjacent
-values of those pixels.  Finally, $W^{(i)}$ is updated by defining the
-diagonal matrix, $\Lambda^{(i)}$, such that $\Lambda^{(i)}_{jj} =
-d^{(i)}_j$, and computing $W^{(i+1)} = \Lambda^{(i)}W^{(i)}$.  {\bf
-  TODO for Misha:} Is this the ``only'' way of doing this?  What's the
-literature here?  What else should we say/cite?
 
-For each outer iteration, as indexed by $i$, we employ an inner
-iteration, to be indexed by $\ell$, in order to select the
-regularization parameter, $\lambda_i$.  As is common in solving
-regularized inverse problems, to make this selection we use an L-curve
-algorithm \cite{Hansenbk}, where we select a set of values,
-$\left\{\lambda^{(\ell)}\right\}$, and solve the minimization problem
-for each value in the set, defining $x^{(i,\ell)}$ to be the minimizer
-of
-\begin{equation}
-  \label{eq:defining_xil}
-\|Kx^{(i,\ell)} - b\|_2^2 + \left(\lambda^{(\ell)}\right)^2\|W^{(i)}Lx^{(i,\ell)}\|_2^2.
-\end{equation}
-Then, $\lambda_i \in \left\{\lambda^{(\ell)}\right\}$ is chosen to
-balance the relative sizes of the two terms in the regularized
-functional.  {\bf Todo from April 25, 2019:} How much do we want to
-describe L-curves?  In my talk on this, I have a sample L-curve, and I
-could include that as a figure and discuss the general principle,
-unless there's a better plan...
+For each outermost iteration, over $M^{(\ell)}$, we must solve the
+\textit{sequence} of linear systems in \eqref{eq:normal} for a set of
+values, $\lambda^{(i)}$.  As a consequence of the non-stationary
+relaxation procedure described above, we use Flexible GMRES
+(FGMRES) \cite{YSaad_2003a} preconditioned by the multigrid V-cycle to
+solve each linear system.  To do this most efficiently, we cycle
+through the chosen values of $\lambda^{(i)}$ from largest to smallest,
+using the solution of the next-largest regularization parameter as the
+initial guess for each system.  We choose this order because the
+multigrid solver is expected to be most effective for large values of
+$\lambda^{(i)}$, where the regularization term dominates.  For the
+largest value of $\lambda^{(i)}$, we use the solution for the chosen
+$\lambda_{\ell-1}$ from the previous iteration as the initial guess,
+with a zero initial guess used for the first outer iteration.  Note
+that, since the solution is expected to vary continuously with
+$\lambda^{(i)}$, this generally provides very good initial guesses, at
+least as we vary the regularization parameter within each outer
+iteration.  This motivates the use of a stopping tolerance that is not
+relative to the initial residual; here, we require the $\ell_2$ norm
+of the residual to be less than a factor of $10^{-4}$ times the norm
+of $K^Tb$.
 
-\subsection{Trimming the L-curve}
+{\bf TODO: More to say here? Emphasize (somewhere?) that we only
+  construction 1 AMG hierarchy per outer iteration?}
 
-Note that at each outer iteration, $i$, for each value of
-$\lambda^{(\ell)}$, we must solve a linear system to determine
-$x^{(i,\ell)}$.  Section \ref{sec:multigrid} details a robust
-algebraic multigrid algorithm that does this effectively for a range
-of problems, making as much reuse as possible of the construction of
-multigrid components.  While this iteration will be shown to be
-efficient and effective, there will always be a nontrivial cost to
-solving such a linear system, scaling at least linearly in the number
-of pixels in the image.  In order to further control the costs of the
-outer iterations (over both $i$ and $\ell$), we now introduce an
-algorithm to effectively ``trim'' the set of values
-$\left\{\lambda^{(\ell)}\right\}$ that needs to be activelt considered
-at each step of the outer iteration.
+Even with the efficient multigrid algorithm and improved initial
+guesses, there is still a nontrivial cost to solving each linear
+system in \eqref{eq:normal} for each value of $\lambda^{(i)}$.  In
+order to further control the costs of the outer iterations, we now
+introduce an algorithm to effectively ``trim'' the set of values
+$\left\{\lambda^{(i)}\right\}$ that needs to be actively considered at
+each iteration.  Recall that we solve the system for multiple values
+of the parameter so that we can construct the L-curve for the
+regularized problem for each choice of $M^{(\ell)}$.  As will be
+observed in Section \ref{sec:numerical}, the values selected as
+$\lambda_\ell$, corresponding to the ``corner'' of the L-curve,
+monotonically increase with $\ell$, typically starting from the
+smallest values of the set $\left\{\lambda^{(i)}\right\}$ at the first
+iteration, and increasing by just one or two increments in each outer
+iteration.
 
-As will be observed in Section \ref{sec:numerical}, the progression of
-values selected as $\lambda_i$ is observed to be monotonically
-increasing from the minimum of $\left\{\lambda^{(\ell)}\right\}$ at
-the first iteration to its final value.  ({\bf TODO: is it
-  monotonic?})  Thus, rather than considering all possible values of
-$\lambda^{(\ell)}$ at each iteration, we limit ourselves to a subset.
-This trimming, however, must be done carefully in order to not lose
+Rather than solving \eqref{eq:normal} for all possible values of
+$\lambda^{(i)}$ at each iteration, to improve efficiency of the
+algorithm, we limit ourselves to only a subset of these values.
+This trimming must, clearly, be done carefully, in order to not lose
 the ability to detect the corner of the L-curve from having too few
 data points, or only having data points on one ``leg'' of the curve.
-To do this, we consider the values $\lambda^{(\ell)}$ to be ordered
+To do this, we consider the values $\lambda^{(i)}$ to be ordered
 increasingly from smallest (denoted $\lambda^{(1)}$) to largest (with
 all values assumed to be strictly positive).  For each outer
-iteration, $i$, we keep track of the index, $\ell_{i-1}$, of the
-regularization parameter chosen at iteration $i-1$ (with $\ell_0$
-taken to be $1$).  Then, at iteration $i$, we consider only a subset
-of $\left\{\lambda^{(\ell)}\right\}$ of size 10, ``centred'' at index
-$\ell_{i-1}$.  In general (when $\ell_{i-1}$ is not too close to
+iteration, $\ell$, we keep track of the index, $i_{\ell-1}$, of the
+regularization parameter chosen at iteration $\ell-1$ (with $i_0$
+taken to be $1$).  Then, at iteration $\ell$, we consider only a subset
+of $\left\{\lambda^{(i)}\right\}$ of size 10, ``centred'' at index
+$i_{\ell-1}$.  In general (when $i_{\ell-1}$ is not too close to
 either endpoint of the interval), we select those values with index
-satisfying $\ell_{i-1}-2 \leq \ell \leq \ell_{i-1}+7$, consistent with
-the expectation that $\ell_{i-1} \leq \ell_i$, but that some data for
-$\ell \leq \ell_{i-1}$ may be needed in order to accurately pick the
-corner of the L-curve.  When $\ell_{i-1}$ is close to either endpoint,
+satisfying $i_{\ell-1}-2 \leq i \leq i_{\ell-1}+7$, consistent with
+the expectation that $i_{\ell-1} \leq i_\ell$, but that some data for
+$i \leq i_{\ell-1}$ may be needed in order to accurately pick the
+corner of the L-curve.  When $i_{\ell-1}$ is close to either endpoint,
 the interval is simply shifted to the smallest or largest 10 values in
-$\left\{\lambda^{(\ell)}\right\}$.  In Section \ref{sec:numerical}, we
+$\left\{\lambda^{(i)}\right\}$.  In Section \ref{sec:numerical}, we
 will compare this approach to the brute-force approach of computing
 all values of $x^{i,\ell}$, showing that this can save significant
 computational time without sacrificing any accuracy in the computed
 solution.
 
-
-
-\subsection{Old text, from before April 25, 2019}
-We consider the solution of the regularized problem
-\begin{equation}
-\label{eq:regularized_old}
-\min_{x} \|Kx-b\|^2 + \lambda^2\|WLx\|^2,
-\end{equation}
-where the equation $Kx=b$ represents a ``data'' term, where $b$ is
-(noisy) data coming from some imaging process represented by $K$, and
-the second term is a regularization term.  Here, $L$ is a discrete
-gradient matrix, and $W$ is a diagonal weighting matrix with weights
-in the range of $[0,1]$.  An equivalent formulation comes from first
-writing this as a rectangular block least-squares problem,
-\begin{equation}
-  \label{eq:block-ls-old}
-  \min_{x} \left\| \left[\begin{array}{c} K \\ \lambda
-                           WL\end{array}\right]x - \left[\begin{array}{c} b \\ 0 \end{array}\right]\right\|^2,
-\end{equation}
-and, then, consider the resulting normal equations,
-\begin{equation}
-\label{eq:normal-old}
-\left(K^TK + \lambda^2 L^TW^2L\right)x = K^Tb.
-\end{equation}
-Since $L$ is a discrete gradient, the second matrix in this expression
-corresponds to a variable-coefficient diffusion operator (with
-diffusion coefficient related to the weights in $W$), while the first
-matrix and right-hand side come from the standard normal equations for
-$Kx=b$.
-
-Overall, this comes from a nonlinear problem, where we wish to choose
-$x$, $W$, and $\lambda$ to minimize this functional while doing
-something (iteration to drive $\ell_2$ regularization towards $\ell_1$
-regularization).  We consider the case of fixed $W$, in the context of
-this outer iteration.  At each step of the outer iteration, we need to
-choose a good regularization parameter, $\lambda$, and find the
-solution, $x$, for that value of $\lambda$.
-
-Describe outer iteration for choosing $W$, so that $\|WLx\|_2 \approx
-\|Lx\|_1$, then middle iteration for choosing $\lambda$ for fixed $W$,
-and L-curve criteria, then need for an inner iteration to solve for
-$x$ given $W$ and $\lambda$.
