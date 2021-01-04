@@ -3,7 +3,7 @@ The described methods have been implemented and tested using MATLAB R2020a and t
 \[
 \|L x^{(\ell)}\|_2^2 < \|L x^{(\ell-1)}\|_2^2,
 \]
-as proposed in \cite{Gazzola_etal_2020}. The multigrid preconditioned GMRES was used without restarting and with an absolute residual stopping criterion of $10^{-6}$.
+as proposed in \cite{Gazzola_etal_2020}. The multigrid preconditioned GMRES was used without restarting and with an absolute residual stopping criterion of $10^{-6}$. As possible values for the regularization parameter $\lambda$ in the outer iteration we used 30 values equally distributed on a logarithmic scale between $10^{-3}$ and $10^{2}$ using MATLAB's \texttt{logspace(2,-3,30)} command.
 
 \subsection{Effect of pre- and post-smoothing}
 Before evaluating the proposed method in detail, we study the dependence of the convergence rate on the number of pre- and post-smoothing steps. For that purpose, we study a tomography example using the Shepp Logan phantom of size $128 \times 128$ with 1\% added noise, created using IR Tools' \cite{art:GAZZ19} \texttt{PRtomo} and \texttt{PRnoise} routines. We tested V(0,1)-, V(1,1)-, V(1,2)-, V(2,1)- and V(2,2)-cycles for this problem. For each outer iteration we recorded the minimal, maximal and average number of inner iterations needed for the different values of $\lambda$ that where evaluated in the respective outer iteration. The resulting maximal, minimal and average numbers of iterations is depicted in Fig.~\ref{fig:its_cycling}, the average number of iterations needed in each outer iteration can also be found in Table~\ref{tab:its_cycling}. As can be seen the difference between V(2,1) cycles and V(2,2) cycles is small and the former even perform better for early outer iterations. Therefore we decided to use V(2,1) cycles in the rest our numerical experiments.
@@ -31,9 +31,9 @@ V(2,2) & 10.4 &16.3 & 11.5 & 7.6 & 3.9 & 3.1 & 3.0 & 2.9 & \multicolumn{1}{c|}{-
 \end{center}
 \label{tab:its_cycling}
 \end{table}%
-\the\textheight
 
 \subsection{Effect of trimming the L-curve}
+Using the V(2,1)-cycle and 1\% noise we studied the effect of the proposed trimming of the L-curve for a computer tomography example using the Shepp Logan phantom of sizes $64 \times 64$, $128 \times 128$ and $256 \times 256$. We compare the L-curve algorithm from \cite{OlearyHansen} applied to the whole range of lambda with two variants of applying it to a smaller range. The first variant starts with the largest 10 values and after that takes seven larger values than the currently chosen $\lambda$ and two smaller values. The second variant uses the whole range and starting from the second iteration onwards the same strategy is followed as by the first variant. The regularization parameters chosen are depicted in Fig.~\ref{fig:shepp_logan_reg_params_with_and_without_trimming}. It is obvious that the first variant tends to choose too small regularization parameters and leads to a larger number of iterations. The second variant choses almost exactly the same regularization parameters and shows the same algorithmic behavior at a little more than one third of the computational cost.
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics{figures/shepp_logan_reg_params_with_and_without_trimming}
@@ -43,11 +43,12 @@ V(2,2) & 10.4 &16.3 & 11.5 & 7.6 & 3.9 & 3.1 & 3.0 & 2.9 & \multicolumn{1}{c|}{-
 \end{figure}
 
 \subsection{Full angle computer tomography}
+For the computer tomography example using the Shepp Logan phantom of sizes $64 \times 64$, $128 \times 128$ and $256 \times 256$ we compared the performance of the algorithm for different noise levels. We used the modified trimming and a V(2,1)-cycle for preconditioning GMRES for 0.5\% noise, 1\% noise and 2\% noise. The resulting errors and the chosen regularization parameters can be found in Fig.~\ref{fig:shepp_logan_errs_and_reg_params}.
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics{figures/shepp_logan_errs_and_reg_params}
-\caption{Regularization parameters and errors for full angle computer tomography of the Shepp Logan phantom.}
-\label{fig:shepp_logan_errs_and_reg_paramsg}
+\caption{Errors and regularization parameters for full angle computer tomography of the Shepp Logan phantom.}
+\label{fig:shepp_logan_errs_and_reg_params}
 \end{center}
 \end{figure}
 \begin{figure}[htbp]
@@ -59,19 +60,35 @@ V(2,2) & 10.4 &16.3 & 11.5 & 7.6 & 3.9 & 3.1 & 3.0 & 2.9 & \multicolumn{1}{c|}{-
 \end{figure}
 
 \subsection{Limited angle computer tomography}
+A similar example was run for a limited angle computer tomography using the grains example from IR tools \cite{art:GAZZ19}. We used the command \texttt{PRset('angles', 0:2:130, 'phantomImage', 'grains')} to set up the problem and chose sizes $64 \times 64$, $128 \times 128$ and $256 \times 256$. As before we compared the performance using the modified trimming and a V(2,1)-cycle for preconditioning GMRES for 0.5\% noise, 1\% noise and 2\% noise. Fig.~\ref{fig:limited_angle_grains_errs_and_reg_params} shows the resulting errors and the chosen regularization parameters.
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics{figures/limited_angle_grains_errs_and_reg_params}
-\caption{Regularization parameters and errors for the 130-degree limited angle computer tomography of the grains example.}
+\caption{Errors and regularization parameters for the 130-degree limited angle computer tomography of the grains example.}
 \label{fig:limited_angle_grains_errs_and_reg_params}
 \end{center}
 \end{figure}
 
 \subsection{Image deblurring}
+To demonstrate that the methodology also works for other inverse problems we blurred the grains example image of sizes $64 \times 64$, $128 \times 128$ and $256 \times 256$ using a discretized integral kernel for the $m \times n$ image represented by the Toeplitz matrix created using:
+\begin{verbatim}
+
+band1 = 8; sigma1=1.5*n/64; 
+band2 = 7; sigma2=1.25*n/64;
+z1 = [exp(-((0:band1-1).^2)/(2*sigma1^2)),zeros(1,n-band1)];
+z1 = z1./(2*sum(z1)-1); z1=z1';
+z2 = [exp(-((0:band2-1).^2)/(2*sigma2^2)),zeros(1,m-band2)];
+z2 = z2./(2*sum(z2)-1); z2=z2';
+A1 = toeplitz(z1); A1 = sparse(A1); 
+A2 = toeplitz(z2); A2 = sparse(A2);
+A = kron(A1,A2);
+
+\end{verbatim}
+0.5\%, 1\% and 2\% noise were added to the image and the method was applied using the same settings as before. The behavior of the algorithm is similar to the other cases and errors as well as registration parameters are to be found in Fig,~\ref{fig:grains_blurring_errs_and_reg_params}.
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics{figures/grains_blurring_errs_and_reg_params}
-\caption{Regularization parameters and errors for the blurred grains example.}
+\caption{Errors and regularization parameters for the blurred grains example.}
 \label{fig:grains_blurring_errs_and_reg_params}
 \end{center}
 \end{figure}
