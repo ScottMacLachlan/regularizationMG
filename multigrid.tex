@@ -16,14 +16,14 @@ the error as the solution of $K e = r$. If coarse representations,
 $K_c$ of $K$ and $r_c$ of $r$, are available, then the system $K_c e_c = r_c$
 can be solved instead and the solution is less expensive. The
 restriction of $r$ to $r_c$ can be obtained by simple injection or by
-more complicated schemes such as, e.g., full-weighting. The coarse-grid
+more complicated schemes such as, e.g., full weighting. The coarse-grid
 operator, $K_c$, can be obtained using a rediscretization of the
 continuous operator on the coarser mesh, or by using a variational
 principle resulting in the Galerkin operator. The error, $e_c$, on the
 coarse mesh is then interpolated to the fine one, yielding an
 approximation $\tilde{e}$. Finally, the current approximate solution
 can be updated as $x = x + \tilde{e}$. As the interpolation process
-introduces high frequency error components in the approximate
+introduces high-frequency error components in the approximate
 solution, in most cases a couple of additional relaxation steps are
 applied. The resulting method is called a
 \emph{two-grid} method.
@@ -65,14 +65,14 @@ multigrid algorithm can be found in Algorithm~\ref{alg:mg}.
   \end{algorithmic}
 \end{algorithm}
 
-In case that the coarsening is not easily determined geometrically, an
+When the coarsening is not easily determined geometrically, an
 algebraic multigrid method (AMG) can be
 used \cite{ABrandt_SFMcCormick_JWRuge_1984a, JWRuge_KStuben_1987a,
 KStuben_2001a}. For a given relaxation scheme, classical AMG
 automatically selects coarse mesh points and the necessary restriction
-and prolongation operators based on certain heuristics that are
+and prolongation operators, using heuristics that are
 typically derived based on M-matrix or similar properties. AMG for
-symmetric problems usually chooses $R_k = P_k^T$, the coarse-grid
+symmetric problems usually chooses $R_k = P_k^T$, and the coarse-grid
 operator is chosen to be the Galerkin coarse-grid operator given by
 $K_{k+1} = P_k^T K_k P_k$.  Once this ``setup phase'' is complete, the
 AMG solution phase proceeds exactly as in the geometric MG setting, as
@@ -205,7 +205,7 @@ style relaxation scheme on each level, we also compute and store
 vectors corresponding to the diagonals of $A_k^TA_K$ and $M_k^TM_k$
 for $1 \leq k \leq k_{\text{max}}-1$.  For the latter of these, we
 simply store the diagonals of the full Galerking coarsening of
-$M_1^TM_1$ on all levels.  For the latter, we compute only the
+$M_1^TM_1$ on all levels.  For the former, we compute only the
 diagonals of $A_k^TA_k$ by computing the sum of squares of entries in
 each column of $A_k$.
 
@@ -226,8 +226,8 @@ $\left(\text{diag}(A_k^TA_k)
 + \left(\lambda^{(i)}\right)^2\text{diag}(M_k^TM_k)\right)^{-1}r_k$
 based on the known vectors representing $\text{diag}(A_k^TA_k)$ and
 $\text{diag}(M_k^TM_k)$ and the parameter $\lambda^{(i)}$.  Within the
-multigrid cycle, we choose to use no sweeps of pre-relaxation and
-three sweeps of post-relaxation.  To effectively choose the relaxation
+multigrid cycle, we choose to use two sweeps of pre-relaxation and
+one sweep of post-relaxation, based on studies discussed in Section \ref{ssec:relaxation_comparison}.  To effectively choose the relaxation
 parameters, we use diagonally preconditioned CG as relaxation on each
 level, instead of a stationary (or Chebyshev accelerated) weighted
 Jacobi relaxation.  This aids in the definition of a multigrid method

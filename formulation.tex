@@ -60,7 +60,7 @@ quadratic regularization problems,
 \label{eq:sequence}
 \min_{x} \| A x - b \|_2^2 + \lambda_\ell^2 \| M^{(\ell)} x \|_2^2,
 \end{equation}
-where $M^{\ell}$ is defined based on $L$ and the approximate solution
+where $M^{(\ell)}$ is defined based on $L$ and the approximate solution
 of the $(\ell-1)$th problem, and $\lambda_\ell$ is chosen based on
 established approaches for the $\ell$th problem.
 
@@ -118,11 +118,11 @@ $k$-dimensional approximation,
 \end{equation}
 where $\beta_1 e_1 = \left(U_{k+1}^{(\ell)}\right)^Tb$.  In
 \cite{Gazzola_etal_2020}, a further iteration occurs where the value
-of $k$ is computed experimentally.  Here, a fixed set of values for
+of $k$ is computed experimentally.  In particular, a fixed set of values for
 $\lambda$ are considered, along with a sequence of values of $k$.  For
 each value of $k$ (increasing from the smallest), the set of problems
 in \eqref{eq:sequence_hybrid} are solved for each of the chosen values
-of$\lambda$, and the L-curve for this solution set is considered.  The
+of $\lambda$, and the L-curve for this solution set is considered.  The
 final choice of $k$ is made by considering the corner of the L-curve,
 and stopping the iteration in $k$ when the estimated corner value
 stays constant.  While this is relatively efficient (since the

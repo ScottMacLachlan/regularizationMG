@@ -19,7 +19,7 @@ least as we vary the regularization parameter within each outer
 iteration.  This motivates the use of a stopping tolerance that is not
 relative to the initial residual; here, we require the $\ell_2$ norm
 of the residual to be less than a factor of $10^{-4}$ times the norm
-of $K^Tb$.
+of $A^Tb$.
 
 {\bf TODO: More to say here? Emphasize (somewhere?) that we only
   construction 1 AMG hierarchy per outer iteration?}
@@ -50,8 +50,7 @@ To do this, we consider the values $\lambda^{(i)}$ to be ordered
 increasingly from smallest (denoted $\lambda^{(1)}$) to largest (with
 all values assumed to be strictly positive).  For each outer
 iteration, $\ell$, we keep track of the index, $i_{\ell-1}$, of the
-regularization parameter chosen at iteration $\ell-1$ (with $i_0$
-taken to be $1$).  Then, at iteration $\ell$, we consider only a subset
+regularization parameter chosen at iteration $\ell-1$.  Then, at iteration $\ell$, we consider only a subset
 of $\left\{\lambda^{(i)}\right\}$ of size 10, ``centred'' at index
 $i_{\ell-1}$.  In general (when $i_{\ell-1}$ is not too close to
 either endpoint of the interval), we select those values with index
@@ -60,9 +59,16 @@ the expectation that $i_{\ell-1} \leq i_\ell$, but that some data for
 $i \leq i_{\ell-1}$ may be needed in order to accurately pick the
 corner of the L-curve.  When $i_{\ell-1}$ is close to either endpoint,
 the interval is simply shifted to the smallest or largest 10 values in
-$\left\{\lambda^{(i)}\right\}$.  In Section \ref{sec:numerical}, we
-will compare this approach to the brute-force approach of computing
-all values of $x^{i,\ell}$, showing that this can save significant
+$\left\{\lambda^{(i)}\right\}$.  Since it is difficult to predict good
+initial values of the regularization parameter (when $\ell = 1$), and
+such values vary depending on both the problem at hand and the
+dimensions of $A$, we generally initialize this algorithm by using a full sweep
+over the set $\lambda^{(i)}$ to find $i_1$, and the trimming the
+values from only the second iteration onwards.  A comparison between
+this strategy and one that aims to trim also at the fist iteration is
+given in Section \ref{ssec:trimming_numerical}, along with a
+comparison to the brute-force approach of computing
+all values of $x^{i,\ell}$.  This will show that this trimming strategy can save significant
 computational time without sacrificing any accuracy in the computed
 solution.
 
