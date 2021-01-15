@@ -4,25 +4,26 @@ The described methods have been implemented and tested using MATLAB R2020a and t
 \|L x^{(\ell)}\|_2^2 < \|L x^{(\ell-1)}\|_2^2,
 \]
 as proposed in \cite{Gazzola_etal_2020}. The multigrid preconditioned
-FGMRES iteration was used (without restarting), with a stopping criterion of a reduction of the $\ell^2$ norm of the residual to below $10^{-6}$. As possible values for the regularization parameter, $\lambda$, in the outer iteration, we used 30 values equally distributed on a logarithmic scale between $10^{-3}$ and $10^{2}$ using MATLAB's \texttt{logspace(2,-3,30)} command.
+FGMRES iteration was used (without restarting), with a stopping
+criterion of a reduction of the $\ell^2$ norm of the residual of the normal equations to below $10^{-6}$. As possible values for the regularization parameter, $\lambda$, in the outer iteration, we used 30 values equally distributed on a logarithmic scale between $10^{-3}$ and $10^{2}$ using MATLAB's \texttt{logspace(2,-3,30)} command.
 
 \subsection{Usage of the solution of the previous iteration}
-Before evaluating the proposed method in detail, we want to highlight the effect of using the solution of the previous outer and inner iteration. Instead of choosing a zero initial guess we use the best solution available at the beginning of each linear solve, which is the solution of the previous outer iteration for the first inner iteration and of the previous inner iteration for each following inner iteration. We used a tomography example using the Shepp Logan phantom of different sizes with different amounts of added noise, created using IR Tools' \cite{art:GAZZ19} \texttt{PRtomo} and \texttt{PRnoise} routines. The resulting average number of inner iterations per outer iteration is plotted in Fig.~\ref{fig:zero_initial_guess_vs_previous_iteration}, demonstrating that using the available information in general reduces the number of inner iterations necessary.
+Before evaluating the proposed method in detail, we want to highlight the effect of using the solution of the previous outer (and inner) iteration at each step. Instead of choosing a zero initial guess, as would be commonly used, we use the best available approximation to the solution as the initial guess for each linear solve.  For the first inner iteration with each outer iteration, this is the solution of the previous outer iteration.  For each subsequent inner iteraiton, it is the solution of the previous inner iteration.  We use a tomography example, using the Shepp Logan phantom of different sizes with different amounts of added noise, created using IR Tools' \cite{art:GAZZ19} \texttt{PRtomo} and \texttt{PRnoise} routines. The resulting average number of inner iterations per outer iteration is plotted in Fig.~\ref{fig:zero_initial_guess_vs_previous_iteration}, demonstrating that, in general, using the available information reduces the number of inner iterations needed.  Thus, in all further experiments we use these improved initial guesses.
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics{figures/zero_initial_guess_vs_previous_iteration}
-\caption{Number of inner iterations needed in each outer iterations of the method applied to the Shepp Logan phantom of size $128 \times 128$ with 1\% noise for different multigrid cycles. Solid lines represent the average number of iterations needed when using a zero initial guess, dashed lines represent the same number when using the solution of the previous inner respectively outer iteration.}
+\caption{Number of inner iterations needed in each outer iteration of the method applied to the Shepp Logan phantom. Solid lines represent the average number of iterations needed when using a zero initial guess, and dashed lines represent the same number when using the solution of the previous inner (or outer) iteration.}
 \label{fig:zero_initial_guess_vs_previous_iteration}
 \end{center}
 \end{figure}
 
-\subsection{Effect of pre- and post-smoothing}
+\subsection{Effect of pre- and post-relaxation}
 \label{ssec:relaxation_comparison}
-An important parameter that has to be chosen in multigrid methods is the number of pre- and post-smoothing steps. To be able to do this, we study the dependence of the convergence rate on the number of pre- and post-smoothing steps. For that purpose, we study the same tomography example as before, limiting ourselves to size $128 \times 128$ with 1\% added noise. We tested V(0,1)-, V(1,1)-, V(1,2)-, V(2,1)- and V(2,2)-cycles for this problem. For each outer iteration, we recorded the minimal, maximal and average number of inner iterations needed for the different values of $\lambda$ that were evaluated in the respective outer iteration. The resulting maximal, minimal and average numbers of iterations is depicted in Fig.~\ref{fig:its_cycling}, while the average number of iterations needed in each outer iteration can also be found in Table~\ref{tab:its_cycling}. As can be seen from these results, the difference in performance between V(2,1) cycles and V(2,2) cycles is small, and the former even perform better for some early outer iterations.  On the other hand, particularly for early outer iterations, the improvement given by using V(2,1) cycles over V(1,1) or V(1,2) cycles is clear.   Therefore, we use V(2,1) cycles in the rest of our numerical experiments.
+An important parameter that has to be chosen in multigrid methods is the number of pre- and post-relaxation steps. To be able to do this, we study the dependence of the convergence rate on the number of pre- and post-relaxation steps. For that purpose, we study the same tomography example as before, limiting ourselves to size $128 \times 128$ with 1\% added noise. We tested V(0,1)-, V(1,1)-, V(1,2)-, V(2,1)- and V(2,2)-cycles for this problem. For each outer iteration, we recorded the minimal, maximal and average number of inner iterations needed for the different values of $\lambda$ that were evaluated in the respective outer iteration. The resulting maximal, minimal and average numbers of iterations is depicted in Fig.~\ref{fig:its_cycling}, while the average number of iterations needed in each outer iteration can also be found in Table~\ref{tab:its_cycling}. As can be seen from these results, the difference in performance between V(2,1) cycles and V(2,2) cycles is small, and the former even perform better for some early outer iterations.  On the other hand, particularly for early outer iterations, the improvement given by using V(2,1) cycles over V(1,1) or V(1,2) cycles is clear.   Therefore, we use V(2,1) cycles in the rest of our numerical experiments.
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics{figures/its_cycling}
-\caption{Number of inner iterations needed in each outer iterations of the method applied to the Shepp Logan phantom of size $128 \times 128$ with 1\% noise for different multigrid cycles. Solid lines represent the average number of iterations needed for the different values of lambda, dashed lines the maximum number of iterations, and dotted lines the minimum.}
+\caption{Number of inner iterations needed in each outer iteration of the method applied to the Shepp Logan phantom of size $128 \times 128$ with 1\% noise for different multigrid cycles. Solid lines represent the average number of iterations needed for the different values of lambda, dashed lines the maximum number of iterations, and dotted lines the minimum.}
 \label{fig:its_cycling}
 \end{center}
 \end{figure}
@@ -108,7 +109,7 @@ We now consider a similar example for \textit{limited angle} computer tomography
 \end{center}
 \end{figure}
 \begin{table}[htp]
-\caption{Errors and regularization parameters chosen for the Shepp Logan limited angle computer tomography example for different image sizes and 0.5\% noise.}
+\caption{Errors and regularization parameters chosen for the 130-degree limited angle computer tomography of the grains example for different image sizes and 0.5\% noise.}
 \begin{center}
 \begin{tabular}{|r|r|r|r|r|r|r|r|r|r|r|}
 \hline
@@ -135,7 +136,7 @@ We now consider a similar example for \textit{limited angle} computer tomography
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics{figures/limited_angle_grains_initial}\includegraphics{figures/limited_angle_grains_final}
-\caption{Initial and final image obtained for the Shepp Logan limited angle computer tomography example for size $128 \times 128$ and 0.5\% noise.}
+\caption{Initial and final image obtained for the 130-degree limited angle computer tomography of the grains example for size $128 \times 128$ and 0.5\% noise.}
 \label{fig:limited_angle_grains_initial_and_final}
 \end{center}
 \end{figure}
