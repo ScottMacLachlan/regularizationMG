@@ -6,13 +6,23 @@ The described methods have been implemented and tested using MATLAB R2020a and t
 as proposed in \cite{Gazzola_etal_2020}. The multigrid preconditioned
 FGMRES iteration was used (without restarting), with a stopping criterion of a reduction of the $\ell^2$ norm of the residual to below $10^{-6}$. As possible values for the regularization parameter, $\lambda$, in the outer iteration, we used 30 values equally distributed on a logarithmic scale between $10^{-3}$ and $10^{2}$ using MATLAB's \texttt{logspace(2,-3,30)} command.
 
-\subsection{Usage of the solution of the previous iteration}
-Before evaluating the proposed method in detail, we want to highlight the effect of using the solution of the previous outer and inner iteration. Instead of choosing a zero initial guess we use the best solution available at the beginning of each linear solve, which is the solution of the previous outer iteration for the first inner iteration and of the previous inner iteration for each following inner iteration. We used a tomography example using the Shepp Logan phantom of different sizes with different amounts of added noise, created using IR Tools' \cite{art:GAZZ19} \texttt{PRtomo} and \texttt{PRnoise} routines. The resulting average number of inner iterations per outer iteration is plotted in Fig.~\ref{fig:zero_initial_guess_vs_previous_iteration}, demonstrating that using the available information in general reduces the number of inner iterations necessary.
+\subsection{Usage of the solution of the previous inner iteration}
+Before evaluating the proposed method in detail, we want to highlight the effect of using the solution of the inner iteration as initial guess. Starting from the second inner iteration instead of choosing a zero initial guess we use the solution of the previous inner iteration for each following inner iteration. We used a tomography example using the Shepp Logan phantom of different sizes with different amounts of added noise, created using IR Tools' \cite{art:GAZZ19} \texttt{PRtomo} and \texttt{PRnoise} routines. The resulting average number of inner iterations per outer iteration is plotted in Fig.~\ref{fig:inner_iteration_zero_initial_guess}, demonstrating that using the available information in general reduces the number of inner iterations necessary.
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics{figures/zero_initial_guess_vs_previous_iteration}
-\caption{Number of inner iterations needed in each outer iterations of the method applied to the Shepp Logan phantom of size $128 \times 128$ with 1\% noise for different multigrid cycles. Solid lines represent the average number of iterations needed when using a zero initial guess, dashed lines represent the same number when using the solution of the previous inner respectively outer iteration.}
-\label{fig:zero_initial_guess_vs_previous_iteration}
+\includegraphics{figures/inner_iteration_zero_initial_guess}
+\caption{Number of inner iterations needed in each outer iterations of the method applied to the Shepp Logan phantom of size $128 \times 128$ with 1\% noise for different multigrid cycles. Solid lines represent the average number of iterations needed when using a zero initial guess in the inner iterations, dashed lines represent the same number when using the solution of the previous inner iteration.}
+\label{fig:inner_iteration_zero_initial_guess}
+\end{center}
+\end{figure}
+
+\subsection{Usage of the solution of the previous outer iteration}
+Similarly to the inner iteration we can use the approximation obtained in the previous iteration in the next outer iteration. To do so, we use the the solution of the previous outer iteration as initial guess for the first inner iteration. We used the same tomography example as in the previous section. The resulting average number of inner iterations per outer iteration is plotted in Fig.~\ref{fig:outer_iteration_zero_initial_guess}, demonstrating that using the available information in general has almost no effect.
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics{figures/outer_iteration_zero_initial_guess}
+\caption{Number of inner iterations needed in each outer iterations of the method applied to the Shepp Logan phantom of size $128 \times 128$ with 1\% noise for different multigrid cycles. Solid lines represent the average number of iterations needed when using a zero initial guess in the outer iteration, dashed lines represent the same number when using the solution of the previous outer iteration.}
+\label{fig:outer_iteration_zero_initial_guess}
 \end{center}
 \end{figure}
 
@@ -29,15 +39,15 @@ An important parameter that has to be chosen in multigrid methods is the number 
 \begin{table}[htp]
 \caption{Average number of inner iterations needed in each outer iterations of the method applied to the Shepp Logan phantom of size $128 \times 128$ with 1\% noise for different multigrid cycles.}
 \begin{center}
-\begin{tabular}{|l|r|r|r|r|r|r|r|r|r|r|}
+\begin{tabular}{|l|r|r|r|r|r|r|r|r|r|}
 \hline
-& \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{2} & \multicolumn{1}{c|}{3} & \multicolumn{1}{c|}{4} & \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{6} & \multicolumn{1}{c|}{7} & \multicolumn{1}{c|}{8} & \multicolumn{1}{c|}{9} & \multicolumn{1}{c|}{10} \\
+& \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{2} & \multicolumn{1}{c|}{3} & \multicolumn{1}{c|}{4} & \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{6} & \multicolumn{1}{c|}{7} & \multicolumn{1}{c|}{8} & \multicolumn{1}{c|}{9} \\
 \hline
-V(0,1) & 28.0 & 46.5 & 28.1 & 18.5 & 9.5 & 6.7 & 6.2 & 5.7 & 5.7 & 5.4 \\
-V(1,1) & 15.0 & 18.0 & 13.0 & 8.4 & 5.6 & 5.0 & 4.4 & 4.2 & \multicolumn{1}{c|}{---} & \multicolumn{1}{c|}{---}\\
-V(1,2) & 13.1 & 18.8 & 14.6 & 8.2 & 4.6 & 3.7 & 3.5 & 3.4 & \multicolumn{1}{c|}{---} & \multicolumn{1}{c|}{---} \\
-V(2,1) & 8.8 & 11.9 & 7.7 & 5.1 & 3.8 & 3.8 & 3.7 & 3.7 & 3.6 & 3.6 \\
-V(2,2) & 10.4 &16.3 & 11.5 & 7.6 & 3.9 & 3.1 & 3.0 & 2.9 & \multicolumn{1}{c|}{---} & \multicolumn{1}{c|}{---} \\
+V(0,1) & 29.13 & 27.83 & 26.20 & 26.93 & 27.47 & 26.67 & 26.83 & 26.80 & 26.80 \\
+V(1,1) & 14.37 & 12.80 & 12.63 & 11.53 & 11.60 & 11.43 & 11.27 & 11.03 & 11.03 \\
+V(1,2) & 12.93 & 12.37 & 11.97 & 12.23 & 11.73 & 11.80 & 11.57 & 11.30 & 11.30 \\
+V(2,1) & 8.57 & 7.77 & 7.40 & 7.2667 & 7.20 & 7.43 & 7.23 & 7.27 & 7.27 \\
+V(2,2) & 10.40 & 10.37 & 10.47 & 10.17 & 10.00 & 10.10 & 9.97 & 10.00 & 10.00 \\
 \hline
 \end{tabular}
 \end{center}
@@ -47,23 +57,23 @@ V(2,2) & 10.4 &16.3 & 11.5 & 7.6 & 3.9 & 3.1 & 3.0 & 2.9 & \multicolumn{1}{c|}{-
 
 \subsection{Effect of trimming the L-curve}
 \label{ssec:trimming_numerical}
-Using the V(2,1)-cycle and 1\% noise, we next consider the effect of the proposed trimming of the L-curve for a computer tomography example using the Shepp Logan phantom of sizes $64 \times 64$, $128 \times 128$ and $256 \times 256$. We compare the L-curve algorithm from \cite{OlearyHansen} applied to the whole range of values of $\lambda$ with two variants that apply it to a smaller range of values. The first variant uses only the smallest 10 values of $\lambda$ when computing the solution to the first outer iteration and, after that, takes the range described above with the seven larger values of $\lambda$ than the optimal value chosen at the previous outer iteration, that value itself, and the two immediately smaller values. The second variant uses the whole range of $\lambda$ values at the first outer iteration but, from the second iteration onwards, follows the same strategy as the first variant. The regularization parameters chosen are depicted in Fig.~\ref{fig:shepp_logan_reg_params_with_and_without_trimming}. Here, we see that, for these examples, the first variant tends to choose a too small regularization parameter in the first iteration, leading to a larger number of iterations. The second variant, in contrast, choses almost exactly the same regularization parameters and shows the same algorithmic behavior as the variant without trimming, but at a little more than one third of the computational cost.
+Using the V(2,1)-cycle and 1\% noise, we next consider the effect of the proposed trimming of the L-curve for a computer tomography example using the Shepp Logan phantom of sizes $64 \times 64$, $128 \times 128$ and $256 \times 256$. We compare the L-curve algorithm from \cite{OlearyHansen} applied to the whole range of values of $\lambda$ with two variants that apply it to a smaller range of values. The first variant uses only the smallest 10 values of $\lambda$ when computing the solution to the first outer iteration and, after that, takes the range described above with the seven larger values of $\lambda$ than the optimal value chosen at the previous outer iteration, that value itself, and the two immediately smaller values. The second variant uses the whole range of $\lambda$ values at the first outer iteration but, from the second iteration onwards, follows the same strategy as the first variant. The regularization parameters chosen are depicted in Fig.~\ref{fig:L-Curve_trimming}. Here, we see that, for these examples, the first variant tends to choose a too small regularization parameter in the first iteration, leading to a larger number of iterations. The second variant, in contrast, choses almost exactly the same regularization parameters and shows the same algorithmic behavior as the variant without trimming, but at a little more than one third of the computational cost.
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics{figures/shepp_logan_reg_params_with_and_without_trimming}
+\includegraphics{figures/L-Curve_trimming}
 \caption{Effect of trimming the L-curve for a full angle computer tomography using the Shepp Logan phantom with 1\% noise. Depicted are the regularization parameters chosen by the algorithm. The modified trimming uses trimming only after the first iteration.}
-\label{fig:shepp_logan_reg_params_with_and_without_trimming}
+\label{fig:L-Curve_trimming}
 \end{center}
 \end{figure}
 
 \subsection{Full angle computer tomography}
-For the computer tomography example using the Shepp Logan phantom of sizes $64 \times 64$, $128 \times 128$ and $256 \times 256$, we now compare the performance of the algorithm for different noise levels. We used the modified trimming approach and a V(2,1)-cycle for preconditioning FGMRES for 0.5\% noise, 1\% noise, and 2\% noise. The resulting errors and the chosen regularization parameters can be found in Fig.~\ref{fig:shepp_logan_errs_and_reg_params} and in Table~\ref{tab:shepp_logan_errs_and_reg_params}. The minimal, maximal and average inner interations needed can be found in Fig~\ref{fig:shepp_logan_inner_its}. The initial and final reconstructions are in Fig.~\ref{fig:shepp_logan_initial_and_final}.
+For the computer tomography example using the Shepp Logan phantom of sizes $64 \times 64$, $128 \times 128$ and $256 \times 256$, we now compare the performance of the algorithm for different noise levels. We used the modified trimming approach and a V(2,1)-cycle for preconditioning FGMRES for 0.5\% noise, 1\% noise, and 2\% noise. The resulting errors and the chosen regularization parameters can be found in Fig.~\ref{fig:full_angle_errs_and_reg_params} and in Table~\ref{tab:full_angle_errs_and_reg_params}. The minimal, maximal and average inner interations needed can be found in Fig~\ref{fig:full_angle_inner_its}. The initial and final reconstructions are in Fig.~\ref{fig:full_angle_initial_and_final}.
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics{figures/shepp_logan_errs_and_reg_params}
+\includegraphics{figures/full_angle_errs_and_reg_params}
 \caption{Errors (left) and regularization parameters chosen (right) for full angle computer tomography of the Shepp Logan phantom for different image sizes (by row) and noise levels.}
-\label{fig:shepp_logan_errs_and_reg_params}
+\label{fig:full_angle_errs_and_reg_params}
 \end{center}
 \end{figure}
 \begin{table}[htp]
@@ -74,27 +84,37 @@ For the computer tomography example using the Shepp Logan phantom of sizes $64 \
 \multicolumn{1}{|c|}{outer} & \multicolumn{2}{c|}{$n = 64$} & \multicolumn{2}{c|}{$n = 128$} & \multicolumn{2}{c|}{$n = 256$} \\\cline{2-7}
 \multicolumn{1}{|c|}{iter.} & \multicolumn{1}{c|}{$\lambda$} & \multicolumn{1}{c|}{$\frac{\|x - x^{(*,\ell)}\|_2}{\|x\|_2}$} & \multicolumn{1}{c|}{$\lambda$} & \multicolumn{1}{c|}{$\frac{\|x - x^{(*,\ell)}\|_2}{\|x\|_2}$}  & \multicolumn{1}{c|}{$\lambda$} & \multicolumn{1}{c|}{$\frac{\|x - x^{(*,\ell)}\|_2}{\|x\|_2}$} \\
 \hline
-1 & 0.0291 & 0.0240 & 0.0621 & 0.0356 & 0.1495 & 0.1495 \\
-2 & 0.0230 & 0.0788 & 0.0379 & 0.1172 & 0.0780 & 0.0780 \\
-3 & 0.0187 & 0.1743 & -- & -- & -- & -- \\
-4 & 0.0108 & 0.3857 & -- & -- & -- & -- \\
+1 & 0.0296 & 0.0240 & 0.0631 & 0.0356 & 0.1495 & 0.1495 \\
+2 & 0.0238 & 0.0788 & 0.0380 & 0.1172 & 0.0774 & 0.0774 \\
+3 & 0.0193 & 0.1743 & -- & -- & -- & -- \\
+4 & 0.0113 & 0.3857 & -- & -- & -- & -- \\
+5 & 0.0055 & 0.8532 & -- & -- & -- & -- \\
+6 & 0.0027 & 2.8072 & -- & -- & -- & -- \\
+7 & 0.0018 & 9.2367 & -- & -- & -- & -- \\
+8 & 0.0018 & 20.4336 & -- & -- & -- & -- \\
+9 & 0.0015 & 45.2035 & -- & -- & -- & -- \\
+10 & 0.0011 & 67.2336 & -- & -- & -- & -- \\
+11 & 0.0010 & 67.2336 & -- & -- & -- & -- \\
+12 & 0.0011 & 67.2336 & -- & -- & -- & -- \\
+13 & 0.0011 & 67.2336 & -- & -- & -- & -- \\
+14 & 0.0011 & 67.2336 & -- & -- & -- & -- \\
 \hline
 \end{tabular}
 \end{center}
-\label{tab:shepp_logan_errs_and_reg_params}
+\label{tab:full_angle_errs_and_reg_params}
 \end{table}%
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics{figures/shepp_logan_inner_its}
+\includegraphics{figures/full_angle_inner_its}
 \caption{Inner iterations for full angle computer tomography of the Shepp Logan phantom.  Solid lines represent the average number of iterations needed for the different values of lambda, dashed lines the maximum number of iterations, and dotted lines the minimum.}
-\label{fig:shepp_logan_inner_its}
+\label{fig:full_angle_inner_its}
 \end{center}
 \end{figure}%
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics{figures/shepp_logan_initial}\includegraphics{figures/shepp_logan_final}
+\includegraphics{figures/full_angle_initial}\includegraphics{figures/full_angle_final}
 \caption{Initial and final image obtained for the Shepp Logan computer tomography example for size $128 \times 128$ and 0.5\% noise.}
-\label{fig:shepp_logan_initial_and_final}
+\label{fig:full_angle_initial_and_final}
 \end{center}
 \end{figure}%
 
@@ -102,7 +122,7 @@ For the computer tomography example using the Shepp Logan phantom of sizes $64 \
 We now consider a similar example for \textit{limited angle} computer tomography, using the grains example from IR tools \cite{art:GAZZ19}. We use the command \texttt{PRset('angles', 0:2:130, 'phantomImage', 'grains')} to set up the problem and choose sizes $64 \times 64$, $128 \times 128$, and $256 \times 256$. As before, we compare the performance using the modified trimming and a V(2,1)-cycle for preconditioning FGMRES with 0.5\% noise, 1\% noise, and 2\% noise. Fig.~\ref{fig:limited_angle_grains_errs_and_reg_params} and Table~\ref{tab:limited_angle_grains_errs_and_reg_params} show the resulting errors and the chosen regularization parameters. The initial and final reconstructions are in Fig.~\ref{fig:limited_angle_grains_initial_and_final}.
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics{figures/limited_angle_grains_errs_and_reg_params}
+\includegraphics{figures/limited_angle_errs_and_reg_params}
 \caption{Errors (left) and regularization parameters chosen (right) for the 130-degree limited angle computer tomography of the grains example for different image sizes (by row) and noise levels.}
 \label{fig:limited_angle_grains_errs_and_reg_params}
 \end{center}
@@ -115,26 +135,19 @@ We now consider a similar example for \textit{limited angle} computer tomography
 \multicolumn{1}{|c|}{outer} & \multicolumn{2}{c|}{$n = 64$} & \multicolumn{2}{c|}{$n = 128$} & \multicolumn{2}{c|}{$n = 256$} \\\cline{2-7}
 \multicolumn{1}{|c|}{iter.} & \multicolumn{1}{c|}{$\lambda$} & \multicolumn{1}{c|}{$\frac{\|x - x^{(*,\ell)}\|_2}{\|x\|_2}$} & \multicolumn{1}{c|}{$\lambda$} & \multicolumn{1}{c|}{$\frac{\|x - x^{(*,\ell)}\|_2}{\|x\|_2}$}  & \multicolumn{1}{c|}{$\lambda$} & \multicolumn{1}{c|}{$\frac{\|x - x^{(*,\ell)}\|_2}{\|x\|_2}$} \\
 \hline
-1 & 0.0734 & 0.0788 & 0.1057 & 0.1172 & 0.1199 & 0.1199 \\
-2 & 0.0593 & 0.1172 & 0.0948 & 0.1743 & 0.1128 & 0.1128 \\
-3 & 0.0507 & 0.2593 & -- & -- & 0.1092 & 0.1092 \\
-4 & 0.0370 & 0.3857 & -- & -- & -- & -- \\
-5 & 0.0305 & 0.5736 & -- & -- & -- & -- \\
-6 & 0.0251 & 1.2690 & -- & -- & -- & -- \\
-7 & 0.0194 & 1.8874 & -- & -- & -- & -- \\
-8 & 0.0167 & 2.8072 & -- & -- & -- & -- \\
-9 & 0.0143 & 4.1753 & -- & -- & -- & -- \\
-10 & 0.0145 & 6.2102 & -- & -- & -- & -- \\
-11 & 0.0152 & 9.2367 & -- & -- & -- & -- \\
-12 & 0.0158 & 13.7382 & -- & -- & -- & -- \\
-13 & 0.0169 & 20.4336 & -- & -- & -- & -- \\\hline
+1 & 0.0803 & 0.0788 & 0.0950 & 0.1172 & 0.1291 & 0.1291 \\
+2 & 0.0646 & 0.1172 & 0.0836 & 0.1743 & 0.1196 & 0.1196 \\
+3 & -- & -- & -- & -- & 0.1098 & 0.1098 \\
+4 & -- & -- & -- & -- & 0.0948 & 0.0948 \\
+5 & -- & -- & -- & -- & 0.0850 & 0.0850 \\
+\hline
 \end{tabular}
 \end{center}
-\label{tab:limited_angle_grains_errs_and_reg_params}
+\label{tab:limited_angle_errs_and_reg_params}
 \end{table}%
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics{figures/limited_angle_grains_initial}\includegraphics{figures/limited_angle_grains_final}
+\includegraphics{figures/limited_angle_initial}\includegraphics{figures/limited_angle_final}
 \caption{Initial and final image obtained for the Shepp Logan limited angle computer tomography example for size $128 \times 128$ and 0.5\% noise.}
 \label{fig:limited_angle_grains_initial_and_final}
 \end{center}
@@ -158,7 +171,7 @@ A = kron(A1,A2);
 As before, 0.5\%, 1\%, and 2\% noise are added to the blurred image and the method is applied using the same settings. The behavior of the algorithm is similar to the other cases and errors as well as regularization parameters are to be found in Fig,~\ref{fig:grains_blurring_errs_and_reg_params} and in Table~\ref{tab:grains_blurring_errs_and_reg_params}. The initial and final reconstruction are in Fig.~\ref{fig:grains_blurring_initial_and_final}.
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics{figures/grains_blurring_errs_and_reg_params}
+\includegraphics{figures/blurring_errs_and_reg_params}
 \caption{Errors (left) and regularization parameters chosen (right) for the blurred grains example for different image sizes (by row) and noise levels.}
 \label{fig:grains_blurring_errs_and_reg_params}
 \end{center}
@@ -171,37 +184,35 @@ As before, 0.5\%, 1\%, and 2\% noise are added to the blurred image and the meth
 \multicolumn{1}{|c|}{outer} & \multicolumn{2}{c|}{$n = 64$} & \multicolumn{2}{c|}{$n = 128$} & \multicolumn{2}{c|}{$n = 256$} \\\cline{2-7}
 \multicolumn{1}{|c|}{iter.} & \multicolumn{1}{c|}{$\lambda$} & \multicolumn{1}{c|}{$\frac{\|x - x^{(*,\ell)}\|_2}{\|x\|_2}$} & \multicolumn{1}{c|}{$\lambda$} & \multicolumn{1}{c|}{$\frac{\|x - x^{(*,\ell)}\|_2}{\|x\|_2}$}  & \multicolumn{1}{c|}{$\lambda$} & \multicolumn{1}{c|}{$\frac{\|x - x^{(*,\ell)}\|_2}{\|x\|_2}$} \\
 \hline
-1 & 0.1051 & 0.0022 & 0.1215 & 0.0033 & 0.0928 & 0.0928 \\
-2 & 0.0891 & 0.0022 & 0.1060 & 0.0049 & 0.0872 & 0.0872 \\
-3 & 0.0746 & 0.0033 & 0.0920 & 0.0073 & 0.0781 & 0.0781 \\
-4 & 0.0575 & 0.0049 & 0.0800 & 0.0108 & 0.0731 & 0.0731 \\
-5 & 0.0486 & 0.0108 & 0.0715 & 0.0161 & 0.0648 & 0.0648 \\
-6 & 0.0427 & 0.0161 & 0.0684 & 0.0240 & 0.0591 & 0.0591 \\
-7 & 0.0413 & 0.0240 & 0.0677 & 0.0530 & 0.0571 & 0.0571 \\
-8 & 0.0408 & 0.0530 & 0.0672 & 0.0788 & 0.0561 & 0.0561 \\
-9 & 0.0406 & 0.0788 & 0.0673 & 0.1172 & 0.0566 & 0.0566 \\
-10 & 0.0394 & 0.1172 & 0.0676 & 0.1743 & 0.0574 & 0.0574 \\
-11 & 0.0392 & 0.2593 & 0.0680 & 0.2593 & 0.0581 & 0.0581 \\
-12 & 0.0392 & 0.5736 & 0.0685 & 0.3857 & 0.0588 & 0.0588 \\
-13 & 0.0391 & 1.8874 & 0.0693 & 0.5736 & 0.0592 & 0.0592 \\
-14 & 0.0390 & 2.8072 & 0.0696 & 0.8532 & 0.0592 & 0.0592 \\
-15 & 0.0387 & 13.7382 & 0.0698 & 1.2690 & 0.0597 & 0.0597 \\
-16 & 0.0388 & 20.4336 & 0.0699 & 1.8874 & 0.0602 & 0.0602 \\
-17 & -- & -- & 0.0700 & 2.8072 & 0.0609 & 0.0609 \\
-18 & -- & -- & 0.0701 & 4.1753 & 0.0614 & 0.0614 \\
-19 & -- & -- & 0.0702 & 13.7382 & 0.0619 & 0.0619 \\
-20 & -- & -- & 0.0702 & 20.4336 & 0.0620 & 0.0620 \\
-21 & -- & -- & 0.0703 & 67.2336 & 0.0622 & 0.0622 \\
-22 & -- & -- & 0.0703 & 67.2336 & 0.0624 & 0.0624 \\
-23 & -- & -- & -- & -- & 0.0625 & 0.0625 \\
-\hline
+1 & 0.0975 & 0.0022 & 0.1228 & 0.0033 & 0.0985 & 0.0985 \\
+2 & 0.0853 & 0.0033 & 0.1070 & 0.0049 & 0.0906 & 0.0906 \\
+3 & 0.0693 & 0.0049 & 0.0932 & 0.0073 & 0.0797 & 0.0797 \\
+4 & 0.0531 & 0.0073 & 0.0805 & 0.0108 & 0.0723 & 0.0723 \\
+5 & 0.0466 & 0.0161 & 0.0743 & 0.0161 & 0.0635 & 0.0635 \\
+6 & 0.0434 & 0.0240 & 0.0700 & 0.0240 & 0.0597 & 0.0597 \\
+7 & 0.0417 & 0.0356 & 0.0692 & 0.0530 & 0.0589 & 0.0589 \\
+8 & 0.0413 & 0.0788 & 0.0693 & 0.0788 & 0.0597 & 0.0597 \\
+9 & 0.0412 & 0.1172 & 0.0695 & 0.1172 & 0.0609 & 0.0609 \\
+10 & 0.0412 & 0.1743 & 0.0700 & 0.1743 & 0.0620 & 0.0620 \\
+11 & 0.0413 & 0.3857 & 0.0705 & 0.2593 & 0.0628 & 0.0628 \\
+12 & 0.0414 & 0.5736 & 0.0707 & 0.3857 & 0.0638 & 0.0638 \\
+13 & 0.0414 & 1.2690 & 0.0707 & 0.5736 & 0.0644 & 0.0644 \\
+14 & 0.0415 & 4.1753 & 0.0711 & 1.2690 & 0.0648 & 0.0648 \\
+15 & 0.0416 & 9.2367 & 0.0711 & 1.2690 & 0.0653 & 0.0653 \\
+16 & 0.0417 & 45.2035 & 0.0713 & 1.8874 & 0.0656 & 0.0656 \\
+17 & 0.0417 & 45.2035 & 0.0716 & 2.8072 & 0.0661 & 0.0661 \\
+18 & -- & -- & 0.0720 & 13.7382 & 0.0664 & 0.0664 \\
+19 & -- & -- & 0.0720 & 20.4336 & 0.0666 & 0.0666 \\
+20 & -- & -- & 0.0719 & 67.2336 & 0.0672 & 0.0672 \\
+21 & -- & -- & -- & -- & 0.0673 & 0.0673 \\
+22 & -- & -- & -- & -- & 0.0674 & 0.0674 \\\hline
 \end{tabular}
 \end{center}
 \label{tab:grains_blurring_errs_and_reg_params}
 \end{table}%
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics{figures/grains_blurring_initial}\includegraphics{figures/grains_blurring_final}
+\includegraphics{figures/blurring_initial}\includegraphics{figures/blurring_final}
 \caption{Initial and final image obtained for the blurred grains example for size $128 \times 128$ and 0.5\% noise.}
 \label{fig:grains_blurring_initial_and_final}
 \end{center}
