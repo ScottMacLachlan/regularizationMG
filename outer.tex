@@ -18,8 +18,7 @@ $\lambda^{(i)}$, this generally provides very good initial guesses, at
 least as we vary the regularization parameter within each outer
 iteration.  This motivates the use of a stopping tolerance that is not
 relative to the initial residual; here, we require the $\ell_2$ norm
-of the residual to be less than a factor of $10^{-4}$ times the norm
-of $A^Tb$.
+of the residual of the normal equations \eqref{eq:normal} to be less than $10^{-6}$.
 
 {\bf TODO: More to say here? Emphasize (somewhere?) that we only
   construction 1 AMG hierarchy per outer iteration?}
